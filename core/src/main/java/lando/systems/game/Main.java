@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -20,6 +21,8 @@ import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.PopupMenu;
 import com.kotcrab.vis.ui.widget.VisTable;
 import imgui.ImGui;
+import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiStyleVar;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -55,24 +58,51 @@ public class Main extends ApplicationAdapter {
     VisTable root;
 
     ImGuiCore imgui;
+    NodeCanvas nodeCanvas;
+    Rectangle view = new Rectangle();
 
     public Main(ImGuiPlatform imGuiPlatform) {
         Main.get = this;
+
         this.imgui = new ImGuiCore(imGuiPlatform);
+        this.nodeCanvas = new NodeCanvas();
     }
 
     @Override
     public void create() {
-        imgui.init();
-
         batch = new SpriteBatch();
         shapes = new ShapeDrawer(batch);
         inputMux = new InputMultiplexer();
-
         windowCamera = new OrthographicCamera();
         windowCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         windowCamera.update();
 
+        loadAssets();
+        loadScene2d();
+
+        imgui.init();
+        nodeCanvas.init();
+    }
+
+    private void loadScene2d() {
+        VisUI.load(skin);
+        VisUI.setDefaultTitleAlign(Align.center);
+
+        stage = new Stage();
+        //stage.setDebugTableUnderMouse(Table.Debug.all);
+
+        root = new VisTable(true);
+        root.setFillParent(true);
+        stage.addActor(root);
+
+        setDefaults();
+        populateRoot();
+
+        inputMux.addProcessor(stage);
+        Gdx.input.setInputProcessor(inputMux);
+    }
+
+    private void loadAssets() {
         backgroundColor = new Color(0.15f, 0.15f, 0.2f, 1f);
         gdx = new Texture("libgdx.png");
 
@@ -105,21 +135,6 @@ public class Main extends ApplicationAdapter {
 
         skin = new Skin(Gdx.files.internal(skinFile + ".json"), atlas);
         skin.addRegions(atlas);
-        VisUI.load(skin);
-        VisUI.setDefaultTitleAlign(Align.center);
-
-        stage = new Stage();
-        //stage.setDebugTableUnderMouse(Table.Debug.all);
-
-        root = new VisTable(true);
-        root.setFillParent(true);
-        stage.addActor(root);
-
-        setDefaults();
-        populateRoot();
-
-        inputMux.addProcessor(stage);
-        Gdx.input.setInputProcessor(inputMux);
     }
 
     public void setDefaults() {
@@ -185,12 +200,37 @@ public class Main extends ApplicationAdapter {
         stage.draw();
 
         imgui.startFrame();
-        ImGui.begin("Hello, gui!");
-        ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
-        if (ImGui.button("Click me!")) {
-            Gdx.app.log("ImGui", "Button clicked!");
+        {
+            var viewport = ImGui.getMainViewport();
+            view.set(
+                viewport.getPosX(), viewport.getPosY(),
+                viewport.getSizeX(), viewport.getSizeY());
+
+            float col1 = 0.6f;
+            float col2 = 1 - col1;
+            float row1 = 0.2f;
+            float row2 = 1 - row1;
+            ImGui.setNextWindowPos(view.x, view.y, ImGuiCond.Always);
+            ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
+            ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 10f);
+            nodeCanvas.render();
+            ImGui.popStyleVar();
+
+            ImGui.setNextWindowPos(view.x + view.width * col1, view.y + view.height * row1, ImGuiCond.Always);
+            ImGui.setNextWindowSize(view.width * col2, view.height * row2, ImGuiCond.Always);
+            ImGui.showMetricsWindow();
+
+            ImGui.setNextWindowPos(view.x + view.width * col1, view.y, ImGuiCond.Always);
+            ImGui.setNextWindowSize(view.width * col2, view.height * row1, ImGuiCond.Always);
+            ImGui.begin("Hello, gui!");
+            ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
+            if (ImGui.button("Click me!")) {
+                Gdx.app.log("ImGui", "Button clicked!");
+            }
+            ImGui.end();
+
+//            ImGui.showDemoWindow();
         }
-        ImGui.end();
         imgui.endFrame();
     }
 
