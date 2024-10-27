@@ -44,25 +44,6 @@ public class NodeCanvas implements Disposable {
         ImNodes.destroyContext();
     }
 
-    private void openUrl(String url) {
-        try {
-            // Use libGDX's built-in browser opener
-            Gdx.net.openURI(url);
-        } catch (Exception e) {
-            // Fallback method using Java's desktop integration
-            try {
-                if (java.awt.Desktop.isDesktopSupported()) {
-                    java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
-                    if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
-                        desktop.browse(new java.net.URI(url));
-                    }
-                }
-            } catch (Exception ex) {
-                Gdx.app.error(NodeCanvas.class.getSimpleName(), "Failed to open URL: " + ex.getMessage());
-            }
-        }
-    }
-
     public void render() {
         if (ImGui.begin("ImNodes Demo")) {
             ImGui.text("This a demo graph editor for ImNodes");
@@ -157,5 +138,24 @@ public class NodeCanvas implements Disposable {
             }
         }
         ImGui.end();
+    }
+
+    private void openUrl(String url) {
+        try {
+            // Use libGDX's built-in browser opener
+            Gdx.net.openURI(url);
+        } catch (Exception e) {
+            // Fallback method using Java's desktop integration
+            try {
+                if (java.awt.Desktop.isDesktopSupported()) {
+                    java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+                    if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                        desktop.browse(new java.net.URI(url));
+                    }
+                }
+            } catch (Exception ex) {
+                Gdx.app.error(NodeCanvas.class.getSimpleName(), "Failed to open URL: " + ex.getMessage());
+            }
+        }
     }
 }

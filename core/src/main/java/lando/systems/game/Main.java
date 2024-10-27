@@ -59,13 +59,17 @@ public class Main extends ApplicationAdapter {
 
     ImGuiCore imgui;
     NodeCanvas nodeCanvas;
+    NodeCanvas2 nodeCanvas2;
     Rectangle view = new Rectangle();
+
+    boolean showNodeCanvas2 = true;
 
     public Main(ImGuiPlatform imGuiPlatform) {
         Main.get = this;
 
         this.imgui = new ImGuiCore(imGuiPlatform);
         this.nodeCanvas = new NodeCanvas();
+        this.nodeCanvas2 = new NodeCanvas2();
     }
 
     @Override
@@ -82,6 +86,7 @@ public class Main extends ApplicationAdapter {
 
         imgui.init();
         nodeCanvas.init();
+        nodeCanvas2.init();
     }
 
     private void loadScene2d() {
@@ -176,6 +181,9 @@ public class Main extends ApplicationAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            showNodeCanvas2 = !showNodeCanvas2;
+        }
 
         stage.act(dt);
 
@@ -213,7 +221,11 @@ public class Main extends ApplicationAdapter {
             ImGui.setNextWindowPos(view.x, view.y, ImGuiCond.Always);
             ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
             ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 10f);
-            nodeCanvas.render();
+            if (showNodeCanvas2) {
+                nodeCanvas2.render();
+            } else {
+                nodeCanvas.render();
+            }
             ImGui.popStyleVar();
 
             ImGui.setNextWindowPos(view.x + view.width * col1, view.y + view.height * row1, ImGuiCond.Always);
