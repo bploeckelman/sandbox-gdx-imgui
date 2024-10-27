@@ -5,11 +5,14 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import imgui.ImFontConfig;
+import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import lando.systems.game.ImGuiPlatform;
 import lando.systems.game.Main;
+import lando.systems.game.shared.FontAwesomeIcons;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -63,16 +66,50 @@ public class Lwjgl3Launcher {
                 }
 
                 ImGui.createContext();
-                var io = ImGui.getIO();
-                io.setIniFilename(null);
-                io.getFonts().addFontDefault();
-                io.getFonts().build();
+                ImGui.getIO().setIniFilename(null);
+
+                initFonts();
 
                 imGuiGlfw.init(window, true);
                 imGuiGl3.init("#version 150");
             } else {
                 throw new GdxRuntimeException("This ImGui platform requires Lwjgl3");
             }
+        }
+
+        private void initFonts() {
+            var io = ImGui.getIO();
+            var fonts = io.getFonts();
+            fonts.setFreeTypeRenderer(true);
+
+            // add defaults for latin glyphs
+            fonts.addFontDefault();
+
+            // add custom ranges for several types of glyphs
+            var rangesBuilder = new ImFontGlyphRangesBuilder();
+            rangesBuilder.addRanges(fonts.getGlyphRangesDefault());
+            rangesBuilder.addRanges(fonts.getGlyphRangesCyrillic());
+            rangesBuilder.addRanges(fonts.getGlyphRangesJapanese());
+            rangesBuilder.addRanges(FontAwesomeIcons._IconRange);
+
+            var config = new ImFontConfig();
+            config.setMergeMode(true);
+
+            float sizePixels = 14;
+            var glyphRanges = rangesBuilder.buildRanges();
+            fonts.addFontFromMemoryTTF(ttfBytes("Tahoma.ttf"), sizePixels, config, glyphRanges); // cyrillic
+            fonts.addFontFromMemoryTTF(ttfBytes("NotoSansCJKjp-Medium.otf"), sizePixels, config, glyphRanges); // japanese
+            fonts.addFontFromMemoryTTF(ttfBytes("Cousine-Regular.ttf"), sizePixels, config, glyphRanges); // english
+            fonts.addFontFromMemoryTTF(ttfBytes("DroidSans.ttf"), sizePixels, config, glyphRanges); // english
+            fonts.addFontFromMemoryTTF(ttfBytes("fa-regular-400.ttf"), sizePixels, config, glyphRanges); // font awesome
+            fonts.addFontFromMemoryTTF(ttfBytes("fa-solid-900.ttf"), sizePixels, config, glyphRanges); // font awesome
+            fonts.build();
+
+            config.destroy();
+        }
+
+        private byte[] ttfBytes(String fontName) {
+            return Gdx.files.internal("fonts/%s".formatted(fontName)).readBytes();
         }
 
         @Override

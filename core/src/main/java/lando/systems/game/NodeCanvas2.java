@@ -9,6 +9,7 @@ import imgui.extension.nodeditor.NodeEditorContext;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 import imgui.flag.ImGuiCond;
 import imgui.type.ImLong;
+import lando.systems.game.shared.FontAwesomeIcons;
 
 public class NodeCanvas2 implements Disposable {
 
@@ -58,13 +59,15 @@ public class NodeCanvas2 implements Disposable {
                 ImGui.text(node.getName());
 
                 NodeEditor.beginPin(node.getInputPinId(), NodeEditorPinKind.Input);
-                ImGui.text("-> In");
+//                ImGui.text("-> In");
+                ImGui.text(FontAwesomeIcons.ArrowCircleRight + " In");
                 NodeEditor.endPin();
 
                 ImGui.sameLine();
 
                 NodeEditor.beginPin(node.getOutputPinId(), NodeEditorPinKind.Output);
-                ImGui.text("Out -> \uf2b9;");
+//                ImGui.text("Out ->");
+                ImGui.text("Out " + FontAwesomeIcons.ArrowCircleRight);
                 NodeEditor.endPin();
 
                 NodeEditor.endNode();
