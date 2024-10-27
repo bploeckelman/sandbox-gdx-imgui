@@ -11,9 +11,9 @@ import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
-import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.Main;
 import lando.systems.game.shared.FontAwesomeIcons;
+import lando.systems.game.shared.ImGuiPlatform;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,10 +99,12 @@ public class Lwjgl3Launcher {
             rangesBuilder.addRanges(FontAwesomeIcons._IconRange);
 
             var config = new ImFontConfig();
+            config.setOversampleH(4);
+            config.setOversampleV(4);
             config.setMergeMode(true);
 
-            float sizePixels = 16;
-            float iconSizePixels = 14;
+            float sizePixels = 18;
+            float iconSizePixels = 10;
             var glyphRanges = rangesBuilder.buildRanges();
 
             // load 'normal' fonts
@@ -110,12 +112,13 @@ public class Lwjgl3Launcher {
             loadFontTTF("NotoSansCJKjp-Medium.otf", sizePixels, config, glyphRanges); // japanese
             loadFontTTF("Cousine-Regular.ttf", sizePixels, config, glyphRanges); // english
             loadFontTTF("DroidSans.ttf", sizePixels, config, glyphRanges); // english
+            loadFontTTF("Play-Regular.ttf", sizePixels, config, glyphRanges); // english
 
             // load 'icon' fonts, with a more 'monospace' look to facilitate alignment
             // see: https://github.com/ocornut/imgui/blob/master/docs/FONTS.md#using-icon-fonts
             config.setGlyphMinAdvanceX(sizePixels);
-            loadFontTTF("fa-regular-400.ttf", iconSizePixels, config, glyphRanges); // font awesome
-            loadFontTTF("fa-solid-900.ttf", iconSizePixels, config, glyphRanges); // font awesome
+//            loadFontTTF("fa-regular-400.ttf", iconSizePixels, config, glyphRanges); // font awesome - outline
+            loadFontTTF("fa-solid-900.ttf", iconSizePixels, config, glyphRanges); // font awesome - solid
 
             fonts.build();
 

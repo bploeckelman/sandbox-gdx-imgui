@@ -1,18 +1,43 @@
 package lando.systems.game.ui;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 import imgui.ImColor;
 import imgui.ImGui;
 import imgui.extension.imnodes.ImNodes;
 import imgui.extension.imnodes.ImNodesEditorContext;
+import imgui.extension.imnodes.ImNodesStyle;
 import imgui.extension.imnodes.flag.ImNodesCol;
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation;
 import imgui.extension.imnodes.flag.ImNodesPinShape;
 import imgui.flag.ImGuiMouseButton;
 import imgui.type.ImInt;
+import lando.systems.game.Util;
+import lando.systems.game.shared.FontAwesomeIcons;
 
 public class NodeCanvas implements Disposable {
+
+    private static final String TAG = NodeCanvas.class.getSimpleName();
+    private static final String PREF_EDITOR_STATE = "node-canvas-editor-state";
+    private static final String URL = "https://github.com/Nelarius/imnodes/tree/master/example";
+    private static final String REPO = "Nelarius/imnodes";
+
+    private static class NodeStyle {
+        static class Attrib {
+            static final float paddingX = 20f;
+            static final float paddingY = 10f;
+            static final float borderThickness = 4f;
+        }
+        static class Color {
+            static final int title = ImColor.rgb("#2e5266");
+            static final int titleHovered = ImColor.rgb("#d3d0cb");
+            static final int titleSelected = ImColor.rgb("#e2c044");
+            static final int outline = ImColor.rgb("#7fa7aa");
+        }
+        static class Pin {
+            static final float circleRadius = 6f;
+            static final float quadSideLength = circleRadius * 2f;
+        }
+    }
 
     final ImGuiCore imgui;
     final Graph graph;
@@ -20,24 +45,33 @@ public class NodeCanvas implements Disposable {
     final ImInt linkB;
 
     ImNodesEditorContext context;
-
-    static class NodeColor {
-        static final int title = ImColor.rgb("#2e5266");
-        static final int titleHovered = ImColor.rgb("#d3d0cb");
-        static final int titleSelected = ImColor.rgb("#e2c044");
-    }
+    ImNodesStyle style;
+    String editorState;
 
     public NodeCanvas(ImGuiCore imgui) {
         this.imgui = imgui;
         this.graph = new Graph();
         this.linkA = new ImInt();
         this.linkB = new ImInt();
+        this.editorState = "";
     }
 
     public void init() {
         ImNodes.createContext();
-        ImNodes.styleColorsDark();
         context = ImNodes.editorContextCreate();
+
+        ImNodes.styleColorsDark();
+        style = ImNodes.getStyle();
+        style.setNodePadding(NodeStyle.Attrib.paddingX, NodeStyle.Attrib.paddingY);
+        style.setNodeBorderThickness(NodeStyle.Attrib.borderThickness);
+        style.setPinCircleRadius(NodeStyle.Pin.circleRadius);
+        style.setPinQuadSideLength(NodeStyle.Pin.quadSideLength);
+        // TODO(brian): not sure how to set these up, need to review library code
+//        style.setColors(ImNodesCol.TitleBar, NodeStyle.Color.title);
+//        style.setColors(ImNodesCol.TitleBarHovered, NodeStyle.Color.titleHovered);
+//        style.setColors(ImNodesCol.TitleBarSelected, NodeStyle.Color.titleSelected);
+
+        loadEditorState();
     }
 
     @Override
@@ -46,48 +80,83 @@ public class NodeCanvas implements Disposable {
         ImNodes.destroyContext();
     }
 
-    public void render() {
-        if (ImGui.begin("ImNodes Demo")) {
-            ImGui.text("This a demo graph editor for ImNodes");
+    // TODO(brian): these are broken currently, I think it has to do with 'dataLength'
+    //  tried both string length (num characters) and byte length (num bytes)
+    //  crashes in both cases so I'm clearly missing something
+    public void saveEditorState() {
+        if (false) {
+            editorState = ImNodes.saveEditorStateToIniString(context);
+            Util.putPref(PREF_EDITOR_STATE, editorState);
+        }
+    }
 
+    public void loadEditorState() {
+        if (false) {
+            editorState = Util.getPref(PREF_EDITOR_STATE, String.class);
+            ImNodes.loadEditorStateFromIniString(context, editorState, editorState.getBytes().length);
+        }
+    }
+
+    public void render() {
+        ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
+
+        if (ImGui.begin(STR."[\{REPO}]")) {
             ImGui.alignTextToFramePadding();
-            ImGui.text("Repo:");
+            if (ImGui.button(STR."\{FontAwesomeIcons.Save} Save")) {
+                saveEditorState();
+                // TODO(brian): show a toast or popup modal or something to indicate it was saved
+            }
             ImGui.sameLine();
-            var URL = "https://github.com/bploeckelman/sandbox-gdx-imgui";
-            if (ImGui.button(URL)) {
-                openUrl(URL);
+            if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen} Load")) {
+                loadEditorState();
+            }
+            ImGui.sameLine();
+            ImGui.text("This a demo graph editor for ImNodes:");
+            ImGui.sameLine();
+            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch} \{REPO}/examples")) {
+                Util.openUrl(URL);
             }
 
             ImNodes.editorContextSet(context);
             ImNodes.beginNodeEditor();
 
+            ImNodes.pushColorStyle(ImNodesCol.TitleBar, NodeStyle.Color.title);
+            ImNodes.pushColorStyle(ImNodesCol.TitleBarHovered, NodeStyle.Color.titleHovered);
+            ImNodes.pushColorStyle(ImNodesCol.TitleBarSelected, NodeStyle.Color.titleSelected);
+            ImNodes.pushColorStyle(ImNodesCol.NodeOutline, NodeStyle.Color.outline);
             for (var node : graph.nodes.values()) {
-                ImNodes.pushColorStyle(ImNodesCol.TitleBar, NodeColor.title);
-                ImNodes.pushColorStyle(ImNodesCol.TitleBarHovered, NodeColor.titleHovered);
-                ImNodes.pushColorStyle(ImNodesCol.TitleBarSelected, NodeColor.titleSelected);
-
                 ImNodes.beginNode(node.nodeId);
+                {
+                    ImNodes.beginNodeTitleBar();
+                    ImGui.text(node.getName());
+                    ImNodes.endNodeTitleBar();
 
-                ImNodes.beginNodeTitleBar();
-                ImGui.text(node.getName());
-                ImNodes.endNodeTitleBar();
+                    var hasIncoming = graph.nodes.values().stream().anyMatch(n -> n.outputNodeId == node.nodeId);
+                    var inColor = hasIncoming ? ImColor.rgb("#ccffcc") : ImColor.rgb("#66ff66");
+                    var inShape = hasIncoming ? ImNodesPinShape.CircleFilled : ImNodesPinShape.QuadFilled;
+                    ImNodes.pushColorStyle(ImNodesCol.Pin, inColor);
+                    ImNodes.beginInputAttribute(node.getInputPinId(), inShape);
+                    ImGui.text("In");
+                    ImNodes.endInputAttribute();
+                    ImNodes.popColorStyle();
 
-                ImNodes.beginInputAttribute(node.getInputPinId(), ImNodesPinShape.CircleFilled);
-                ImGui.text("In");
-                ImNodes.endInputAttribute();
+                    ImGui.sameLine();
 
-                ImGui.sameLine();
-
-                ImNodes.beginOutputAttribute(node.getOutputPinId());
-                ImGui.text("Out");
-                ImNodes.endOutputAttribute();
-
+                    var hasOutgoing = (node.outputNodeId != -1);
+                    var outColor = hasOutgoing ? ImColor.rgb("#ccccff") : ImColor.rgb("#6666ff");
+                    var outShape = hasOutgoing ? ImNodesPinShape.CircleFilled : ImNodesPinShape.QuadFilled;
+                    ImNodes.pushColorStyle(ImNodesCol.Pin, outColor);
+                    ImNodes.beginOutputAttribute(node.getOutputPinId(), outShape);
+                    ImGui.text("Out");
+                    ImNodes.endOutputAttribute();
+                    ImNodes.popColorStyle();
+                }
                 ImNodes.endNode();
-
-                ImNodes.popColorStyle();
-                ImNodes.popColorStyle();
-                ImNodes.popColorStyle();
             }
+            ImNodes.popColorStyle();
+            ImNodes.popColorStyle();
+            ImNodes.popColorStyle();
+            ImNodes.popColorStyle();
 
             int uniqueLinkId = 1;
             for (var node : graph.nodes.values()) {
@@ -122,7 +191,7 @@ public class NodeCanvas implements Disposable {
             if (ImGui.isPopupOpen("node_context")) {
                 int targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
                 if (ImGui.beginPopup("node_context")) {
-                    if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
+                    if (ImGui.button(STR."Delete \{graph.nodes.get(targetNode).getName()}")) {
                         graph.nodes.remove(targetNode);
                         ImGui.closeCurrentPopup();
                     }
@@ -140,24 +209,7 @@ public class NodeCanvas implements Disposable {
             }
         }
         ImGui.end();
-    }
 
-    private void openUrl(String url) {
-        try {
-            // Use libGDX's built-in browser opener
-            Gdx.net.openURI(url);
-        } catch (Exception e) {
-            // Fallback method using Java's desktop integration
-            try {
-                if (java.awt.Desktop.isDesktopSupported()) {
-                    java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
-                    if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
-                        desktop.browse(new java.net.URI(url));
-                    }
-                }
-            } catch (Exception ex) {
-                Gdx.app.error(NodeCanvas.class.getSimpleName(), "Failed to open URL: " + ex.getMessage());
-            }
-        }
+        ImGui.popFont();
     }
 }

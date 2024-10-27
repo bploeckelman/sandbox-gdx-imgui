@@ -1,17 +1,20 @@
 package lando.systems.game.ui;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.NodeEditorConfig;
 import imgui.extension.nodeditor.NodeEditorContext;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
-import imgui.flag.ImGuiCond;
 import imgui.type.ImLong;
+import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
 public class NodeCanvas2 implements Disposable {
+
+    private static final String TAG = NodeCanvas2.class.getSimpleName();
+    private static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
+    private static final String REPO = "thedmd/imgui-node-editor";
 
     final ImGuiCore imgui;
     final Graph graph;
@@ -35,22 +38,18 @@ public class NodeCanvas2 implements Disposable {
     }
 
     public void render() {
-//        ImGui.setNextWindowSize(500, 400, ImGuiCond.Once);
-//        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + 100, ImGui.getMainViewport().getPosY() + 200, ImGuiCond.Once);
+        ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
 
-        ImGui.pushFont(imgui.getFont("DroidSans.ttf"));
-        if (ImGui.begin("imgui-node-editor Demo")) {
-            ImGui.text("This a demo graph editor for imgui-node-editor");
+        if (ImGui.begin(STR."[\{REPO}]")) {
+            ImGui.text("This a demo graph editor for NodeEditor");
 
             ImGui.alignTextToFramePadding();
-            ImGui.text("Repo:");
             ImGui.sameLine();
-            var URL = "https://github.com/bploeckelman/sandbox-gdx-imgui";
-            if (ImGui.button(URL)) {
-                openUrl(URL);
+            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch} \{REPO}/examples")) {
+                Util.openUrl(URL);
             }
 
-            if (ImGui.button("Navigate to content")) {
+            if (ImGui.button("Zoom to content")) {
                 NodeEditor.navigateToContent(1);
             }
 
@@ -134,24 +133,5 @@ public class NodeCanvas2 implements Disposable {
         ImGui.end();
 
         ImGui.popFont();
-    }
-
-    private void openUrl(String url) {
-        try {
-            // Use libGDX's built-in browser opener
-            Gdx.net.openURI(url);
-        } catch (Exception e) {
-            // Fallback method using Java's desktop integration
-            try {
-                if (java.awt.Desktop.isDesktopSupported()) {
-                    java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
-                    if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
-                        desktop.browse(new java.net.URI(url));
-                    }
-                }
-            } catch (Exception ex) {
-                Gdx.app.error(NodeCanvas2.class.getSimpleName(), "Failed to open URL: " + ex.getMessage());
-            }
-        }
     }
 }

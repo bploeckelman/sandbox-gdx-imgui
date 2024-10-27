@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.PopupMenu;
@@ -33,12 +35,16 @@ import space.earlygrey.shapedrawer.ShapeDrawer;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 
-    public static Main get;
+    private static final String TAG = Main.class.getSimpleName();
+
+    public static Main game;
 
     public SpriteBatch batch;
     public ShapeDrawer shapes;
     public OrthographicCamera windowCamera;
     public InputMultiplexer inputMux;
+    public Preferences preferences;
+    public Json json;
 
     Color backgroundColor;
     TextureAtlas atlas;
@@ -67,11 +73,10 @@ public class Main extends ApplicationAdapter {
     NodeCanvas2 nodeCanvas2;
     Rectangle view = new Rectangle();
 
-    boolean showNodeCanvas2 = true;
+    boolean showNodeCanvas2 = false;
 
     public Main(ImGuiPlatform imGuiPlatform) {
-        Main.get = this;
-
+        Main.game = this;
         this.imgui = new ImGuiCore(imGuiPlatform);
         this.nodeCanvas = new NodeCanvas(imgui);
         this.nodeCanvas2 = new NodeCanvas2(imgui);
@@ -79,6 +84,8 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
+        Util.init();
+
         batch = new SpriteBatch();
         shapes = new ShapeDrawer(batch);
         inputMux = new InputMultiplexer();
