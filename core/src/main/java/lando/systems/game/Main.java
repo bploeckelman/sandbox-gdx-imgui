@@ -20,6 +20,9 @@ import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.PopupMenu;
 import com.kotcrab.vis.ui.widget.VisTable;
 import imgui.ImGui;
+import imgui.ImGuiConfigFlags;
+import imgui.ImGuiLoader;
+import imgui.gdx.ImGuiGdxImpl;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -54,16 +57,18 @@ public class Main extends ApplicationAdapter {
     Stage stage;
     VisTable root;
 
-    ImGuiCore imgui;
+    private ImGuiGdxImpl imgui;
 
-    public Main(ImGuiPlatform imGuiPlatform) {
+    public Main() {
         Main.get = this;
-        this.imgui = new ImGuiCore(imGuiPlatform);
     }
 
     @Override
     public void create() {
-        imgui.init();
+        ImGuiLoader.init(() -> {});
+        ImGui.CreateContext();
+        ImGui.GetIO().set_ConfigFlags(ImGuiConfigFlags.ImGuiConfigFlags_DockingEnable);
+        imgui = new ImGuiGdxImpl();
 
         batch = new SpriteBatch();
         shapes = new ShapeDrawer(batch);
@@ -184,14 +189,24 @@ public class Main extends ApplicationAdapter {
 
         stage.draw();
 
-        imgui.startFrame();
-        ImGui.begin("Hello, gui!");
-        ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
-        if (ImGui.button("Click me!")) {
-            Gdx.app.log("ImGui", "Button clicked!");
+        // Start a new ImGui frame
+        imgui.newFrame();
+        {
+            ImGui.Begin("Hello, imgui!");
+            if (ImGui.Button("Show Modal")) {
+                ImGui.OpenPopup("Modal");
+            }
+            if (ImGui.BeginPopupModal("Modal")) {
+                ImGui.Text("Hello from the modal!");
+                if (ImGui.Button("Close")) {
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
+            }
+            ImGui.End();
         }
-        ImGui.end();
-        imgui.endFrame();
+        ImGui.Render();
+        imgui.render(ImGui.GetDrawData());
     }
 
     @Override

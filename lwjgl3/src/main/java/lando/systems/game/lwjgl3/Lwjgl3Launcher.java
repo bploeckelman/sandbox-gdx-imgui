@@ -1,14 +1,7 @@
 package lando.systems.game.lwjgl3;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import imgui.ImGui;
-import imgui.gl3.ImGuiImplGl3;
-import imgui.glfw.ImGuiImplGlfw;
-import lando.systems.game.ImGuiPlatform;
 import lando.systems.game.Main;
 
 /** Launches the desktop (LWJGL3) application. */
@@ -24,7 +17,7 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new Main(new ImGuiDesktop()), getDefaultConfiguration());
+        return new Lwjgl3Application(new Main(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
@@ -42,56 +35,49 @@ public class Lwjgl3Launcher {
         configuration.setWindowedMode(WINDOW_WIDTH, WINDOW_HEIGHT);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+        configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL30, 3, 2);
         return configuration;
     }
 
-    private static class ImGuiDesktop implements ImGuiPlatform {
-
-        public long window;
-        public ImGuiImplGlfw imGuiGlfw;
-        public ImGuiImplGl3 imGuiGl3;
-
-        @Override
-        public void init() {
-            if (Gdx.graphics instanceof Lwjgl3Graphics lwjgl3Graphics) {
-                imGuiGlfw = new ImGuiImplGlfw();
-                imGuiGl3 = new ImGuiImplGl3();
-
-                window = lwjgl3Graphics.getWindow().getWindowHandle();
-                if (window == 0) {
-                    throw new GdxRuntimeException("Failed to create the GLFW window");
-                }
-
-                ImGui.createContext();
-                var io = ImGui.getIO();
-                io.setIniFilename(null);
-                io.getFonts().addFontDefault();
-                io.getFonts().build();
-
-                imGuiGlfw.init(window, true);
-                imGuiGl3.init("#version 150");
-            } else {
-                throw new GdxRuntimeException("This ImGui platform requires Lwjgl3");
-            }
-        }
-
-        @Override
-        public void startFrame() {
-            imGuiGl3.newFrame();
-            imGuiGlfw.newFrame();
-        }
-
-        @Override
-        public void endFrame() {
-            imGuiGl3.renderDrawData(ImGui.getDrawData());
-        }
-
-        @Override
-        public void dispose() {
-            imGuiGl3.shutdown();
-            imGuiGl3 = null;
-            imGuiGlfw.shutdown();
-            imGuiGlfw = null;
-        }
-    }
+//    private static class ImGuiDesktop implements ImGuiPlatform {
+//
+//        ImGuiGdxImpl imguiImpl;
+//        ImGuiGdxInputMultiplexer imguiInputMux;
+//
+//        @Override
+//        public void init() {
+//            ImGui.CreateContext();
+//            var io = ImGui.GetIO();
+//            io.set_ConfigFlags(ImGuiConfigFlags.ImGuiConfigFlags_DockingEnable);
+//
+//            imguiImpl = new ImGuiGdxImpl();
+//            imguiInputMux = new ImGuiGdxInputMultiplexer();
+//            Gdx.input.setInputProcessor(imguiInputMux);
+//
+//            var fonts = ImGui.GetIO().get_Fonts();
+//            var fontFile01 = Gdx.files.internal("fonts/Cousine-Regular.ttf");
+//            var fontFile02 = Gdx.files.internal("fonts/DroidSans.ttf");
+//
+//            fonts.AddFontFromMemoryTTF(fontFile01.readBytes(), 16).setName(fontFile01.name());
+//            fonts.AddFontFromMemoryTTF(fontFile02.readBytes(), 20).setName(fontFile02.name());
+//        }
+//
+//        @Override
+//        public void startFrame() {
+//            imguiImpl.newFrame();
+//        }
+//
+//        @Override
+//        public void endFrame() {
+//            ImGui.Render();
+//            imguiImpl.render(ImGui.GetDrawData());
+//        }
+//
+//        @Override
+//        public void dispose() {
+//            imguiImpl.dispose();
+//            ImGui.disposeStatic();
+//            ImGui.DestroyContext();
+//        }
+//    }
 }

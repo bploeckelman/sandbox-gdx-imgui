@@ -37,11 +37,23 @@ dependencies {
   implementation project(':core')
   implementation("com.badlogicgames.gdx:gdx-tools:$gdxVersion"){exclude group: 'com.badlogicgames.gdx', module: 'gdx-backend-lwjgl'}
 
-  implementation "io.github.spair:imgui-java-binding:$imguiJavaVersion"
-  implementation "io.github.spair:imgui-java-lwjgl3:$imguiJavaVersion"
-  implementation "io.github.spair:imgui-java-natives-linux:$imguiJavaVersion"
-  implementation "io.github.spair:imgui-java-natives-macos:$imguiJavaVersion"
-  implementation "io.github.spair:imgui-java-natives-windows:$imguiJavaVersion"
+
+  // imgui support
+  // -----------------------------------------------------------------------
+  // imgui-java: native java bindings, manual setup
+//  implementation "io.github.spair:imgui-java-binding:$imguiJavaVersion"
+//  implementation "io.github.spair:imgui-java-lwjgl3:$imguiJavaVersion"
+//  implementation "io.github.spair:imgui-java-natives-linux:$imguiJavaVersion"
+//  implementation "io.github.spair:imgui-java-natives-macos:$imguiJavaVersion"
+//  implementation "io.github.spair:imgui-java-natives-windows:$imguiJavaVersion"
+
+  // gdx-imgui: bindings specifically for libgdx, with or without extensions
+  implementation "com.github.xpenatan.gdx-imgui:imgui-ext-desktop:$gdxImGuiVersion"
+//  implementation("com.github.xpenatan.gdx-imgui:imgui-desktop:$gdxImGuiVersion")
+  // technically these shouldn't be needed here...
+//  implementation("com.github.xpenatan.gdx-imgui:imgui-ext-core:$gdxImGuiVersion")
+//  implementation("com.github.xpenatan.gdx-imgui:gdx-impl:$gdxImGuiVersion")
+  // -----------------------------------------------------------------------
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"

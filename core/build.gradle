@@ -29,7 +29,18 @@ dependencies {
   api "de.golfgl.gdxcontrollerutils:gdx-controllerutils-scene2d:$controllerScene2DVersion"
   api "org.mini2Dx:universal-tween-engine:$universalTweenVersion"
   api "space.earlygrey:shapedrawer:$shapeDrawerVersion"
-  api "io.github.spair:imgui-java-binding:$imguiJavaVersion"
+
+  // imgui support
+  // -----------------------------------------------------------------------
+  // imgui-java: native java bindings, manual setup
+//  api "io.github.spair:imgui-java-binding:$imguiJavaVersion"
+
+  // gdx-imgui: bindings specifically for libgdx, with or without extensions
+  implementation("com.github.xpenatan.gdx-imgui:gdx-impl:$gdxImGuiVersion")
+  implementation "com.github.xpenatan.gdx-imgui:imgui-ext-core:$gdxImGuiVersion"
+//  implementation("com.github.xpenatan.gdx-imgui:imgui-core:$gdxImGuiVersion")
+  // -----------------------------------------------------------------------
+
   api project(':shared')
   annotationProcessor "org.projectlombok:lombok:$lombokVersion"
   compileOnly "org.projectlombok:lombok:$lombokVersion"
