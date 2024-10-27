@@ -1,4 +1,4 @@
-package lando.systems.game;
+package lando.systems.game.ui;
 
 import java.util.HashMap;
 import java.util.Map;

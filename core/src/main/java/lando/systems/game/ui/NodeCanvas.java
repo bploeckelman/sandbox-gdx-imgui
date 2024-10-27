@@ -1,4 +1,4 @@
-package lando.systems.game;
+package lando.systems.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
@@ -14,11 +14,12 @@ import imgui.type.ImInt;
 
 public class NodeCanvas implements Disposable {
 
-    ImNodesEditorContext context;
+    final ImGuiCore imgui;
+    final Graph graph;
+    final ImInt linkA;
+    final ImInt linkB;
 
-    Graph graph;
-    ImInt linkA;
-    ImInt linkB;
+    ImNodesEditorContext context;
 
     static class NodeColor {
         static final int title = ImColor.rgb("#2e5266");
@@ -26,10 +27,11 @@ public class NodeCanvas implements Disposable {
         static final int titleSelected = ImColor.rgb("#e2c044");
     }
 
-    public NodeCanvas() {
-        graph = new Graph();
-        linkA = new ImInt();
-        linkB = new ImInt();
+    public NodeCanvas(ImGuiCore imgui) {
+        this.imgui = imgui;
+        this.graph = new Graph();
+        this.linkA = new ImInt();
+        this.linkB = new ImInt();
     }
 
     public void init() {

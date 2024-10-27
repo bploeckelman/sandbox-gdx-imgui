@@ -1,4 +1,4 @@
-package lando.systems.game;
+package lando.systems.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
@@ -13,12 +13,14 @@ import lando.systems.game.shared.FontAwesomeIcons;
 
 public class NodeCanvas2 implements Disposable {
 
+    final ImGuiCore imgui;
+    final Graph graph;
+
     NodeEditorContext context;
 
-    Graph graph;
-
-    public NodeCanvas2() {
-        graph = new Graph();
+    public NodeCanvas2(ImGuiCore imgui) {
+        this.imgui = imgui;
+        this.graph = new Graph();
     }
 
     public void init() {
@@ -33,8 +35,10 @@ public class NodeCanvas2 implements Disposable {
     }
 
     public void render() {
-        ImGui.setNextWindowSize(500, 400, ImGuiCond.Once);
-        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + 100, ImGui.getMainViewport().getPosY() + 200, ImGuiCond.Once);
+//        ImGui.setNextWindowSize(500, 400, ImGuiCond.Once);
+//        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + 100, ImGui.getMainViewport().getPosY() + 200, ImGuiCond.Once);
+
+        ImGui.pushFont(imgui.getFont("DroidSans.ttf"));
         if (ImGui.begin("imgui-node-editor Demo")) {
             ImGui.text("This a demo graph editor for imgui-node-editor");
 
@@ -59,15 +63,13 @@ public class NodeCanvas2 implements Disposable {
                 ImGui.text(node.getName());
 
                 NodeEditor.beginPin(node.getInputPinId(), NodeEditorPinKind.Input);
-//                ImGui.text("-> In");
-                ImGui.text(FontAwesomeIcons.ArrowCircleRight + " In");
+                ImGui.text(STR."\{FontAwesomeIcons.ArrowCircleRight} In");
                 NodeEditor.endPin();
 
                 ImGui.sameLine();
 
                 NodeEditor.beginPin(node.getOutputPinId(), NodeEditorPinKind.Output);
-//                ImGui.text("Out ->");
-                ImGui.text("Out " + FontAwesomeIcons.ArrowCircleRight);
+                ImGui.text(STR."Out \{FontAwesomeIcons.ArrowCircleRight}");
                 NodeEditor.endPin();
 
                 NodeEditor.endNode();
@@ -130,6 +132,8 @@ public class NodeCanvas2 implements Disposable {
             NodeEditor.end();
         }
         ImGui.end();
+
+        ImGui.popFont();
     }
 
     private void openUrl(String url) {

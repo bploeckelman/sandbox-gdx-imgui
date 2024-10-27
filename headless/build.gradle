@@ -4,7 +4,7 @@ apply plugin: 'application'
 java.sourceCompatibility = 21
 java.targetCompatibility = 21
 if (JavaVersion.current().isJava9Compatible()) {
-        compileJava.options.release.set(21)
+  compileJava.options.release.set(21)
 }
 
 mainClassName = 'lando.systems.game.headless.HeadlessLauncher'

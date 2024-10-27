@@ -1,4 +1,6 @@
-package lando.systems.game;
+package lando.systems.game.shared;
+
+import imgui.ImFont;
 
 public interface ImGuiPlatform {
 
@@ -6,5 +8,6 @@ public interface ImGuiPlatform {
     void startFrame();
     void endFrame();
     void dispose();
+    ImFont getFont(String name);
 
 }

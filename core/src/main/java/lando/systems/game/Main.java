@@ -23,6 +23,11 @@ import com.kotcrab.vis.ui.widget.VisTable;
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiStyleVar;
+import lando.systems.game.shared.FontAwesomeIcons;
+import lando.systems.game.shared.ImGuiPlatform;
+import lando.systems.game.ui.ImGuiCore;
+import lando.systems.game.ui.NodeCanvas;
+import lando.systems.game.ui.NodeCanvas2;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -68,8 +73,8 @@ public class Main extends ApplicationAdapter {
         Main.get = this;
 
         this.imgui = new ImGuiCore(imGuiPlatform);
-        this.nodeCanvas = new NodeCanvas();
-        this.nodeCanvas2 = new NodeCanvas2();
+        this.nodeCanvas = new NodeCanvas(imgui);
+        this.nodeCanvas2 = new NodeCanvas2(imgui);
     }
 
     @Override
@@ -127,7 +132,7 @@ public class Main extends ApplicationAdapter {
         shapes.setTextureRegion(pixelRegion);
 
         var skinFile = "ui/skin-talos/uiskin";
-        atlas = new TextureAtlas(Gdx.files.internal(skinFile + ".atlas"));
+        atlas = new TextureAtlas(Gdx.files.internal(STR."\{skinFile}.atlas"));
         radioBtnTextures = new RadioButtonTextures(
             atlas.findRegion("vis-radio"),
             atlas.findRegion("vis-radio-over"),
@@ -138,7 +143,7 @@ public class Main extends ApplicationAdapter {
             atlas.findRegion("border-circle-error")
         );
 
-        skin = new Skin(Gdx.files.internal(skinFile + ".json"), atlas);
+        skin = new Skin(Gdx.files.internal(STR."\{skinFile}.json"), atlas);
         skin.addRegions(atlas);
     }
 
@@ -236,7 +241,7 @@ public class Main extends ApplicationAdapter {
             ImGui.setNextWindowSize(view.width * col2, view.height * row1, ImGuiCond.Always);
             ImGui.begin("Hello, gui!");
             ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
-            if (ImGui.button("Click me!")) {
+            if (ImGui.button(STR."\{FontAwesomeIcons.MousePointer} Click me!")) {
                 Gdx.app.log("ImGui", "Button clicked!");
             }
             ImGui.end();

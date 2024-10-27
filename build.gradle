@@ -25,6 +25,16 @@ allprojects {
       testOutputDir file('build/classes/java/test')
     }
   }
+
+  tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += "--enable-preview"
+  }
+  tasks.withType(Test).configureEach {
+    jvmArgs += "--enable-preview"
+  }
+  tasks.withType(JavaExec).configureEach {
+    jvmArgs += "--enable-preview"
+  }
 }
 
 configure(subprojects) {
@@ -54,6 +64,7 @@ configure(subprojects) {
 
   compileJava {
     options.incremental = true
+    options.compilerArgs += '--enable-preview'
   }
 }
 

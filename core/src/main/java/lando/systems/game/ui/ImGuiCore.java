@@ -1,8 +1,10 @@
-package lando.systems.game;
+package lando.systems.game.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import imgui.ImFont;
 import imgui.ImGui;
+import lando.systems.game.shared.ImGuiPlatform;
 
 public class ImGuiCore implements ImGuiPlatform {
 
@@ -18,6 +20,12 @@ public class ImGuiCore implements ImGuiPlatform {
     @Override
     public void init() {
         platform.init();
+    }
+
+    @Override
+    public void dispose() {
+        platform.dispose();
+        ImGui.destroyContext();
     }
 
     @Override
@@ -47,8 +55,7 @@ public class ImGuiCore implements ImGuiPlatform {
     }
 
     @Override
-    public void dispose() {
-        platform.dispose();
-        ImGui.destroyContext();
+    public ImFont getFont(String name) {
+        return platform.getFont(name);
     }
 }

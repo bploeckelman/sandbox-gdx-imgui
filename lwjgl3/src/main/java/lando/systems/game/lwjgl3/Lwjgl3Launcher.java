@@ -5,14 +5,18 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.utils.GdxRuntimeException;
+import imgui.ImFont;
 import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
-import lando.systems.game.ImGuiPlatform;
+import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.Main;
 import lando.systems.game.shared.FontAwesomeIcons;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -53,6 +57,7 @@ public class Lwjgl3Launcher {
         public long window;
         public ImGuiImplGlfw imGuiGlfw;
         public ImGuiImplGl3 imGuiGl3;
+        public Map<String, ImFont> fontMap = new HashMap<>();
 
         @Override
         public void init() {
@@ -67,6 +72,7 @@ public class Lwjgl3Launcher {
 
                 ImGui.createContext();
                 ImGui.getIO().setIniFilename(null);
+                // TODO(brian): setup docking support
 
                 initFonts();
 
@@ -95,21 +101,41 @@ public class Lwjgl3Launcher {
             var config = new ImFontConfig();
             config.setMergeMode(true);
 
-            float sizePixels = 14;
+            float sizePixels = 16;
+            float iconSizePixels = 14;
             var glyphRanges = rangesBuilder.buildRanges();
-            fonts.addFontFromMemoryTTF(ttfBytes("Tahoma.ttf"), sizePixels, config, glyphRanges); // cyrillic
-            fonts.addFontFromMemoryTTF(ttfBytes("NotoSansCJKjp-Medium.otf"), sizePixels, config, glyphRanges); // japanese
-            fonts.addFontFromMemoryTTF(ttfBytes("Cousine-Regular.ttf"), sizePixels, config, glyphRanges); // english
-            fonts.addFontFromMemoryTTF(ttfBytes("DroidSans.ttf"), sizePixels, config, glyphRanges); // english
-            fonts.addFontFromMemoryTTF(ttfBytes("fa-regular-400.ttf"), sizePixels, config, glyphRanges); // font awesome
-            fonts.addFontFromMemoryTTF(ttfBytes("fa-solid-900.ttf"), sizePixels, config, glyphRanges); // font awesome
+
+            // load 'normal' fonts
+            loadFontTTF("Tahoma.ttf", sizePixels, config, glyphRanges); // cyrillic
+            loadFontTTF("NotoSansCJKjp-Medium.otf", sizePixels, config, glyphRanges); // japanese
+            loadFontTTF("Cousine-Regular.ttf", sizePixels, config, glyphRanges); // english
+            loadFontTTF("DroidSans.ttf", sizePixels, config, glyphRanges); // english
+
+            // load 'icon' fonts, with a more 'monospace' look to facilitate alignment
+            // see: https://github.com/ocornut/imgui/blob/master/docs/FONTS.md#using-icon-fonts
+            config.setGlyphMinAdvanceX(sizePixels);
+            loadFontTTF("fa-regular-400.ttf", iconSizePixels, config, glyphRanges); // font awesome
+            loadFontTTF("fa-solid-900.ttf", iconSizePixels, config, glyphRanges); // font awesome
+
             fonts.build();
 
             config.destroy();
         }
 
+        @Override
+        public ImFont getFont(String name) {
+            return fontMap.get(name);
+        }
+
+        private void loadFontTTF(String fontName, float sizePixels, ImFontConfig config, short[] glyphRanges) {
+            var fonts = ImGui.getIO().getFonts();
+            var bytes = ttfBytes(fontName);
+            var font = fonts.addFontFromMemoryTTF(bytes, sizePixels, config, glyphRanges);
+            fontMap.put(fontName, font);
+        }
+
         private byte[] ttfBytes(String fontName) {
-            return Gdx.files.internal("fonts/%s".formatted(fontName)).readBytes();
+            return Gdx.files.internal(STR."fonts/\{fontName}").readBytes();
         }
 
         @Override

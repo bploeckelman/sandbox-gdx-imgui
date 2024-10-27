@@ -1,5 +1,5 @@
 eclipse.project.name = appName + '-shared'
 
 dependencies {
-
+  api "io.github.spair:imgui-java-binding:$imguiJavaVersion"
 }
