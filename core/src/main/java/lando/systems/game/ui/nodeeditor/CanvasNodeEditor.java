@@ -17,6 +17,7 @@ public class CanvasNodeEditor extends NodeCanvas {
     private static final String TAG = CanvasNodeEditor.class.getSimpleName();
     private static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
     private static final String REPO = "thedmd/imgui-node-editor";
+    private static final String SETTINGS_FILE = "node-editor.json";
 
     final Graph graph;
 
@@ -30,7 +31,7 @@ public class CanvasNodeEditor extends NodeCanvas {
     @Override
     public void init() {
         var config = new NodeEditorConfig();
-        config.setSettingsFile(null);
+        config.setSettingsFile(SETTINGS_FILE);
         context = NodeEditor.createEditor(config);
     }
 
