@@ -14,9 +14,9 @@ import imgui.type.ImInt;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
-public class NodeCanvas implements Disposable {
+public class CanvasImNodes implements Disposable {
 
-    private static final String TAG = NodeCanvas.class.getSimpleName();
+    private static final String TAG = CanvasImNodes.class.getSimpleName();
     private static final String PREF_EDITOR_STATE = "node-canvas-editor-state";
     private static final String URL = "https://github.com/Nelarius/imnodes/tree/master/example";
     private static final String REPO = "Nelarius/imnodes";
@@ -48,7 +48,7 @@ public class NodeCanvas implements Disposable {
     ImNodesStyle style;
     String editorState;
 
-    public NodeCanvas(ImGuiCore imgui) {
+    public CanvasImNodes(ImGuiCore imgui) {
         this.imgui = imgui;
         this.graph = new Graph();
         this.linkA = new ImInt();

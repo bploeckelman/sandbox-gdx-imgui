@@ -28,8 +28,8 @@ import imgui.flag.ImGuiStyleVar;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.ui.ImGuiCore;
-import lando.systems.game.ui.NodeCanvas;
-import lando.systems.game.ui.NodeCanvas2;
+import lando.systems.game.ui.CanvasImNodes;
+import lando.systems.game.ui.CanvasNodeEditor;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -69,8 +69,8 @@ public class Main extends ApplicationAdapter {
     VisTable root;
 
     ImGuiCore imgui;
-    NodeCanvas nodeCanvas;
-    NodeCanvas2 nodeCanvas2;
+    CanvasImNodes canvasImNodes;
+    CanvasNodeEditor canvasNodeEditor;
     Rectangle view = new Rectangle();
 
     boolean showNodeCanvas2 = false;
@@ -78,8 +78,8 @@ public class Main extends ApplicationAdapter {
     public Main(ImGuiPlatform imGuiPlatform) {
         Main.game = this;
         this.imgui = new ImGuiCore(imGuiPlatform);
-        this.nodeCanvas = new NodeCanvas(imgui);
-        this.nodeCanvas2 = new NodeCanvas2(imgui);
+        this.canvasImNodes = new CanvasImNodes(imgui);
+        this.canvasNodeEditor = new CanvasNodeEditor(imgui);
     }
 
     @Override
@@ -97,8 +97,8 @@ public class Main extends ApplicationAdapter {
         loadScene2d();
 
         imgui.init();
-        nodeCanvas.init();
-        nodeCanvas2.init();
+        canvasImNodes.init();
+        canvasNodeEditor.init();
     }
 
     private void loadScene2d() {
@@ -234,9 +234,9 @@ public class Main extends ApplicationAdapter {
             ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
             ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 10f);
             if (showNodeCanvas2) {
-                nodeCanvas2.render();
+                canvasNodeEditor.render();
             } else {
-                nodeCanvas.render();
+                canvasImNodes.render();
             }
             ImGui.popStyleVar();
 

@@ -10,9 +10,9 @@ import imgui.type.ImLong;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
-public class NodeCanvas2 implements Disposable {
+public class CanvasNodeEditor implements Disposable {
 
-    private static final String TAG = NodeCanvas2.class.getSimpleName();
+    private static final String TAG = CanvasNodeEditor.class.getSimpleName();
     private static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
     private static final String REPO = "thedmd/imgui-node-editor";
 
@@ -21,7 +21,7 @@ public class NodeCanvas2 implements Disposable {
 
     NodeEditorContext context;
 
-    public NodeCanvas2(ImGuiCore imgui) {
+    public CanvasNodeEditor(ImGuiCore imgui) {
         this.imgui = imgui;
         this.graph = new Graph();
     }
