@@ -27,9 +27,9 @@ import imgui.flag.ImGuiStyleVar;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.ui.ImGuiCore;
+import lando.systems.game.ui.NodeCanvas;
 import lando.systems.game.ui.imnodes.CanvasImNodes;
 import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
-import lando.systems.game.ui.NodeCanvas;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -202,6 +202,7 @@ public class Main extends ApplicationAdapter {
         }
 
         stage.act(dt);
+        canvasNodeEditor.update();
 
         windowCamera.update();
     }
@@ -225,6 +226,7 @@ public class Main extends ApplicationAdapter {
 
         imgui.startFrame();
         {
+            // TODO(brian): most of the layout here can be replaced with docking
             var viewport = ImGui.getMainViewport();
             view.set(
                 viewport.getPosX(), viewport.getPosY(),
@@ -266,6 +268,8 @@ public class Main extends ApplicationAdapter {
         pixel.dispose();
         atlas.dispose();
         VisUI.dispose();
+        canvasImNodes.dispose();
+        canvasNodeEditor.dispose();
         imgui.dispose();
     }
 

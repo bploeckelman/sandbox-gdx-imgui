@@ -6,11 +6,14 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.SerializationException;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
+import imgui.ImColor;
 
 public class Util {
 
     private static final String TAG = Util.class.getSimpleName();
     private static final String PREFS_NAME = "sandbox-imgui-prefs";
+
+    public static final int IM_COLOR_WHITE = ImColor.rgba(1f, 1f, 1f, 1f);
 
     public static Preferences prefs;
     public static Json json;

@@ -81,6 +81,9 @@ public class CanvasImNodes extends NodeCanvas {
     }
 
     @Override
+    public void update() {}
+
+    @Override
     public void render() {
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
 

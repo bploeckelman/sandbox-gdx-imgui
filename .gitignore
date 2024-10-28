@@ -1,5 +1,6 @@
 ## Project:
 assets/node-editor.json
+assets/*pid*.log
 
 ## Gradle:
 .gradle/

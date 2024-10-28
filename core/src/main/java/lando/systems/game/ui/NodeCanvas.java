@@ -15,6 +15,7 @@ public abstract class NodeCanvas implements Disposable {
 
     public abstract void init();
     public abstract void dispose();
+    public abstract void update();
     public abstract void render();
 
     public void load() {
