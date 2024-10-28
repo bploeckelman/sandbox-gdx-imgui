@@ -17,7 +17,6 @@ import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.kotcrab.vis.ui.VisUI;
 import com.kotcrab.vis.ui.widget.PopupMenu;
@@ -28,8 +27,8 @@ import imgui.flag.ImGuiStyleVar;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.ui.ImGuiCore;
-import lando.systems.game.ui.CanvasImNodes;
-import lando.systems.game.ui.CanvasNodeEditor;
+import lando.systems.game.ui.imnodes.CanvasImNodes;
+import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
 import lando.systems.game.ui.NodeCanvas;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 

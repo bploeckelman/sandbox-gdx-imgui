@@ -1,4 +1,4 @@
-package lando.systems.game.ui;
+package lando.systems.game.ui.nodeeditor;
 
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
@@ -8,6 +8,9 @@ import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 import imgui.type.ImLong;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
+import lando.systems.game.ui.Graph;
+import lando.systems.game.ui.ImGuiCore;
+import lando.systems.game.ui.NodeCanvas;
 
 public class CanvasNodeEditor extends NodeCanvas {
 

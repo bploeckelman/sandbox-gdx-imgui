@@ -1,4 +1,4 @@
-package lando.systems.game.ui;
+package lando.systems.game.ui.imnodes;
 
 import imgui.ImColor;
 import imgui.ImGui;
@@ -12,6 +12,9 @@ import imgui.flag.ImGuiMouseButton;
 import imgui.type.ImInt;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
+import lando.systems.game.ui.Graph;
+import lando.systems.game.ui.ImGuiCore;
+import lando.systems.game.ui.NodeCanvas;
 
 public class CanvasImNodes extends NodeCanvas {
 
