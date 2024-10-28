@@ -119,6 +119,8 @@ public class Lwjgl3Launcher {
             config.setGlyphMinAdvanceX(sizePixels);
 //            loadFontTTF("fa-regular-400.ttf", iconSizePixels, config, glyphRanges); // font awesome - outline
             loadFontTTF("fa-solid-900.ttf", iconSizePixels, config, glyphRanges); // font awesome - solid
+            // TODO(brian): update code points in FontAwesomeIcons.java to support new version
+//            loadFontTTF("fa-solid-900-v6.ttf", iconSizePixels, config, glyphRanges); // font awesome - solid v6
 
             fonts.build();
 

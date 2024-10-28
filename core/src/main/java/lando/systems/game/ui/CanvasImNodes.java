@@ -1,6 +1,5 @@
 package lando.systems.game.ui;
 
-import com.badlogic.gdx.utils.Disposable;
 import imgui.ImColor;
 import imgui.ImGui;
 import imgui.extension.imnodes.ImNodes;
@@ -14,7 +13,7 @@ import imgui.type.ImInt;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
-public class CanvasImNodes implements Disposable {
+public class CanvasImNodes extends NodeCanvas {
 
     private static final String TAG = CanvasImNodes.class.getSimpleName();
     private static final String PREF_EDITOR_STATE = "node-canvas-editor-state";
@@ -39,7 +38,6 @@ public class CanvasImNodes implements Disposable {
         }
     }
 
-    final ImGuiCore imgui;
     final Graph graph;
     final ImInt linkA;
     final ImInt linkB;
@@ -49,13 +47,14 @@ public class CanvasImNodes implements Disposable {
     String editorState;
 
     public CanvasImNodes(ImGuiCore imgui) {
-        this.imgui = imgui;
+        super(imgui);
         this.graph = new Graph();
         this.linkA = new ImInt();
         this.linkB = new ImInt();
         this.editorState = "";
     }
 
+    @Override
     public void init() {
         ImNodes.createContext();
         context = ImNodes.editorContextCreate();
@@ -70,8 +69,6 @@ public class CanvasImNodes implements Disposable {
 //        style.setColors(ImNodesCol.TitleBar, NodeStyle.Color.title);
 //        style.setColors(ImNodesCol.TitleBarHovered, NodeStyle.Color.titleHovered);
 //        style.setColors(ImNodesCol.TitleBarSelected, NodeStyle.Color.titleSelected);
-
-        loadEditorState();
     }
 
     @Override
@@ -80,40 +77,22 @@ public class CanvasImNodes implements Disposable {
         ImNodes.destroyContext();
     }
 
-    // TODO(brian): these are broken currently, I think it has to do with 'dataLength'
-    //  tried both string length (num characters) and byte length (num bytes)
-    //  crashes in both cases so I'm clearly missing something
-    public void saveEditorState() {
-        if (false) {
-            editorState = ImNodes.saveEditorStateToIniString(context);
-            Util.putPref(PREF_EDITOR_STATE, editorState);
-        }
-    }
-
-    public void loadEditorState() {
-        if (false) {
-            editorState = Util.getPref(PREF_EDITOR_STATE, String.class);
-            ImNodes.loadEditorStateFromIniString(context, editorState, editorState.getBytes().length);
-        }
-    }
-
+    @Override
     public void render() {
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
 
         if (ImGui.begin(STR."[\{REPO}]")) {
             ImGui.alignTextToFramePadding();
-            if (ImGui.button(STR."\{FontAwesomeIcons.Save} Save")) {
-                saveEditorState();
+            if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ")) {
                 // TODO(brian): show a toast or popup modal or something to indicate it was saved
+                save();
             }
             ImGui.sameLine();
-            if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen} Load")) {
-                loadEditorState();
+            if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen}Load ")) {
+                load();
             }
             ImGui.sameLine();
-            ImGui.text("This a demo graph editor for ImNodes:");
-            ImGui.sameLine();
-            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch} \{REPO}/examples")) {
+            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch}\{REPO}/examples ")) {
                 Util.openUrl(URL);
             }
 
@@ -212,4 +191,23 @@ public class CanvasImNodes implements Disposable {
 
         ImGui.popFont();
     }
+
+    // TODO(brian): load and save are broken currently, I think it has to do with 'dataLength'
+    //  tried both string length (num characters) and byte length (num bytes)
+    //  crashes in both cases so I'm clearly missing something
+//    @Override
+//    public void load() {
+//        if (false) {
+//            editorState = Util.getPref(PREF_EDITOR_STATE, String.class);
+//            ImNodes.loadEditorStateFromIniString(context, editorState, editorState.getBytes().length);
+//        }
+//    }
+//
+//    @Override
+//    public void save() {
+//        if (false) {
+//            editorState = ImNodes.saveEditorStateToIniString(context);
+//            Util.putPref(PREF_EDITOR_STATE, editorState);
+//        }
+//    }
 }

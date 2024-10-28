@@ -30,6 +30,7 @@ import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.CanvasImNodes;
 import lando.systems.game.ui.CanvasNodeEditor;
+import lando.systems.game.ui.NodeCanvas;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -44,7 +45,6 @@ public class Main extends ApplicationAdapter {
     public OrthographicCamera windowCamera;
     public InputMultiplexer inputMux;
     public Preferences preferences;
-    public Json json;
 
     Color backgroundColor;
     TextureAtlas atlas;
@@ -73,7 +73,8 @@ public class Main extends ApplicationAdapter {
     CanvasNodeEditor canvasNodeEditor;
     Rectangle view = new Rectangle();
 
-    boolean showNodeCanvas2 = false;
+    NodeCanvas.Type nodeCanvasType = NodeCanvas.Type.NODE_EDITOR;
+    NodeCanvas nodeCanvas;
 
     public Main(ImGuiPlatform imGuiPlatform) {
         Main.game = this;
@@ -99,6 +100,7 @@ public class Main extends ApplicationAdapter {
         imgui.init();
         canvasImNodes.init();
         canvasNodeEditor.init();
+        setActiveNodeCanvas(nodeCanvasType);
     }
 
     private void loadScene2d() {
@@ -194,7 +196,10 @@ public class Main extends ApplicationAdapter {
             Gdx.app.exit();
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            showNodeCanvas2 = !showNodeCanvas2;
+            setActiveNodeCanvas(
+                nodeCanvasType == NodeCanvas.Type.NODE_EDITOR
+                    ? NodeCanvas.Type.IM_NODES
+                    : NodeCanvas.Type.NODE_EDITOR);
         }
 
         stage.act(dt);
@@ -233,11 +238,7 @@ public class Main extends ApplicationAdapter {
             ImGui.setNextWindowPos(view.x, view.y, ImGuiCond.Always);
             ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
             ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 10f);
-            if (showNodeCanvas2) {
-                canvasNodeEditor.render();
-            } else {
-                canvasImNodes.render();
-            }
+            nodeCanvas.render();
             ImGui.popStyleVar();
 
             ImGui.setNextWindowPos(view.x + view.width * col1, view.y + view.height * row1, ImGuiCond.Always);
@@ -267,5 +268,13 @@ public class Main extends ApplicationAdapter {
         atlas.dispose();
         VisUI.dispose();
         imgui.dispose();
+    }
+
+    private void setActiveNodeCanvas(NodeCanvas.Type nodeCanvasType) {
+        this.nodeCanvasType = nodeCanvasType;
+        this.nodeCanvas = switch (nodeCanvasType) {
+            case IM_NODES -> canvasImNodes;
+            case NODE_EDITOR -> canvasNodeEditor;
+        };
     }
 }

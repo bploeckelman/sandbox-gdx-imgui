@@ -1,6 +1,5 @@
 package lando.systems.game.ui;
 
-import com.badlogic.gdx.utils.Disposable;
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.NodeEditorConfig;
@@ -10,22 +9,22 @@ import imgui.type.ImLong;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
-public class CanvasNodeEditor implements Disposable {
+public class CanvasNodeEditor extends NodeCanvas {
 
     private static final String TAG = CanvasNodeEditor.class.getSimpleName();
     private static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
     private static final String REPO = "thedmd/imgui-node-editor";
 
-    final ImGuiCore imgui;
     final Graph graph;
 
     NodeEditorContext context;
 
     public CanvasNodeEditor(ImGuiCore imgui) {
-        this.imgui = imgui;
+        super(imgui);
         this.graph = new Graph();
     }
 
+    @Override
     public void init() {
         var config = new NodeEditorConfig();
         config.setSettingsFile(null);
@@ -37,20 +36,27 @@ public class CanvasNodeEditor implements Disposable {
         NodeEditor.destroyEditor(context);
     }
 
+    @Override
     public void render() {
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
 
         if (ImGui.begin(STR."[\{REPO}]")) {
-            ImGui.text("This a demo graph editor for NodeEditor");
-
             ImGui.alignTextToFramePadding();
-            ImGui.sameLine();
-            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch} \{REPO}/examples")) {
-                Util.openUrl(URL);
+            if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ")) {
+                // TODO(brian): show a toast or popup modal or something to indicate it was saved
+                save();
             }
-
-            if (ImGui.button("Zoom to content")) {
+            ImGui.sameLine();
+            if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen}Load ")) {
+                load();
+            }
+            ImGui.sameLine();
+            if (ImGui.button(STR."\{FontAwesomeIcons.SearchLocation}Zoom ")) {
                 NodeEditor.navigateToContent(1);
+            }
+            ImGui.sameLine();
+            if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch}\{REPO}/examples ")) {
+                Util.openUrl(URL);
             }
 
             NodeEditor.setCurrentEditor(context);
