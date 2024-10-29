@@ -6,9 +6,7 @@ import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.ImVec4;
-import imgui.extension.imnodes.flag.ImNodesStyleVar;
 import imgui.extension.nodeditor.NodeEditor;
-import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 import imgui.flag.ImDrawFlags;
 import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.Pin;
@@ -17,109 +15,185 @@ public class NodeBuilder {
 
     private static final String TAG = NodeBuilder.class.getSimpleName();
 
-    enum Stage { INVALID, BEGIN, HEADER, CONTENT, INPUT, MIDDLE, OUTPUT, END }
-
     private final BlueprintEditor editor;
 
-    private Stage stage;
+    private record SectionBounds(ImVec2 min, ImVec2 max) {
+        public SectionBounds() {
+            this(new ImVec2(), new ImVec2());
+        }
+        public static SectionBounds fromItemRect() {
+            return new SectionBounds(ImGui.getItemRectMin(), ImGui.getItemRectMax());
+        }
+    }
+
     private Node currentNode;
     private Pin currentPin;
     private boolean hasHeader;
     private ImVec4 headerColor;
-    private ImVec2 nodeMin;
-    private ImVec2 nodeMax;
-    private ImVec2 headerMin;
-    private ImVec2 headerMax;
-    private ImVec2 contentMin;
-    private ImVec2 contentMax;
+    private SectionBounds nodeBounds;
+    private SectionBounds headerBounds;
+    private SectionBounds contentBounds;
+    private SectionBounds inputsBounds;
+    private SectionBounds middleBounds;
+    private SectionBounds outputsBounds;
     private TextureRegion headerTexture;
+
+    // TODO(brian): change the pattern for each section to have the caller provide a callback
+    //  where the callback includes all widget render calls for whatever content goes in each section
+    //  that would simplify the usage code, preventing the need to call begin/end for each section
 
     public NodeBuilder(BlueprintEditor blueprintEditor) {
         this.editor = blueprintEditor;
-        this.stage = Stage.INVALID;
         this.currentNode = null;
         this.currentPin = null;
-        this.headerColor = new ImVec4(1, 1, 1, 1);
         this.hasHeader = false;
-        this.nodeMin = new ImVec2();
-        this.nodeMax = new ImVec2();
-        this.headerMin = new ImVec2();
-        this.headerMax = new ImVec2();
-        this.contentMin = new ImVec2();
-        this.contentMax = new ImVec2();
+        this.headerColor = new ImVec4(1, 1, 1, 1);
         this.headerTexture = null;
     }
 
-    public Stage stage() {
-        return stage;
-    }
-
     public void begin(Node node) {
-        hasHeader = false;
-        headerMin.set(0, 0);
-        headerMax.set(0, 0);
+        if (node == null) {
+            Gdx.app.log(TAG, "NodeBuilder.begin: invalid node");
+            return;
+        }
 
         currentNode = node;
-
-        NodeEditor.pushStyleVar(ImNodesStyleVar.NodePadding, 8);
-        NodeEditor.pushStyleVar(ImNodesStyleVar.NodeBorderThickness, 2);
+        hasHeader = false;
+        headerBounds = new SectionBounds();
 
         NodeEditor.beginNode(currentNode.pointerId);
         ImGui.pushID(currentNode.pointerId);
-
-        setStage(Stage.BEGIN);
+        ImGui.beginGroup();
     }
 
     public void end() {
-        setStage(Stage.END);
-
+        ImGui.endGroup();
+        ImGui.popID();
         NodeEditor.endNode();
 
-        if (ImGui.isItemVisible()) {
-            var drawList = NodeEditor.getNodeBackgroundDrawList(currentNode.pointerId);
-            var halfBorderWidth = NodeEditor.getStyle().getNodeBorderWidth() * 0.5f;
-            var alpha = ImGui.getStyle().getAlpha();
+//        if (ImGui.isItemVisible()) {
+//            var drawList = NodeEditor.getNodeBackgroundDrawList(currentNode.pointerId);
+//            var halfBorderWidth = NodeEditor.getStyle().getNodeBorderWidth() * 0.5f;
+//            var alpha = ImGui.getStyle().getAlpha();
+//
+//            var tempHeaderColor = ImColor.rgba(headerColor.x, headerColor.y, headerColor.z, alpha);
+//            if ((headerMax.x > headerMin.x) && (headerMax.y > headerMin.y) && headerTexture != null) {
+//                // TODO(brian): might either not need to worry about uvs or might need to use Texture instead
+//                var uv = new ImVec2(
+//                    (headerMax.x - headerMin.x) / (4 * headerTexture.getRegionWidth()),
+//                    (headerMax.y - headerMin.y) / (4 * headerTexture.getRegionHeight()));
+//                drawList.addImageRounded(
+//                    headerTexture.getTexture().getTextureObjectHandle(),
+//                    headerMin.x - (8 - halfBorderWidth),
+//                    headerMin.y - (4 - halfBorderWidth),
+//                    headerMax.x + (8 - halfBorderWidth),
+//                    headerMax.y,
+//                    0, 0, uv.x, uv.y, tempHeaderColor,
+//                    NodeEditor.getStyle().getNodeRounding(),
+//                    ImDrawFlags.RoundCornersTop);
+//
+//                if (contentMin.y > headerMax.y) {
+//                    drawList.addLine(
+//                        headerMin.x - (8 - halfBorderWidth), headerMax.y - 0.5f,
+//                        headerMax.x + (8 - halfBorderWidth), headerMax.y - 0.5f,
+//                        ImColor.rgba(255, 255, 255, 96 / (3 * 255)), 1f);
+//                }
+//            }
+//        }
 
-            var tempHeaderColor = ImColor.rgba(headerColor.x, headerColor.y, headerColor.z, alpha);
-            if ((headerMax.x > headerMin.x) && (headerMax.y > headerMin.y) && headerTexture != null) {
-                // TODO(brian): might either not need to worry about uvs or might need to use Texture instead
-                var uv = new ImVec2(
-                    (headerMax.x - headerMin.x) / (4 * headerTexture.getRegionWidth()),
-                    (headerMax.y - headerMin.y) / (4 * headerTexture.getRegionHeight()));
-                drawList.addImageRounded(
-                    headerTexture.getTexture().getTextureObjectHandle(),
-                    headerMin.x - (8 - halfBorderWidth),
-                    headerMin.y - (4 - halfBorderWidth),
-                    headerMax.x + (8 - halfBorderWidth),
-                    headerMax.y,
-                    0, 0, uv.x, uv.y, tempHeaderColor,
-                    NodeEditor.getStyle().getNodeRounding(),
-                    ImDrawFlags.RoundCornersTop);
-
-                if (contentMin.y > headerMax.y) {
-                    drawList.addLine(
-                        headerMin.x - (8 - halfBorderWidth), headerMax.y - 0.5f,
-                        headerMax.x + (8 - halfBorderWidth), headerMax.y - 0.5f,
-                        ImColor.rgba(255, 255, 255, 96 / (3 * 255)), 1f);
-                }
-            }
-        }
-
-        ImGui.popID();
-        NodeEditor.popStyleVar(2);
-
+        nodeBounds = SectionBounds.fromItemRect();
         currentNode = null;
+    }
 
-        setStage(Stage.INVALID);
+    /**
+     * Render customized backgrounds for different sections of the node.
+     * NOTE: this can only be called after NodeBuilder.end() has been called,
+     *  because `ImGui.getNodeBackgroundDrawList()` requires that the node is fully specified
+     */
+    public void renderNodeBackgrounds(long nodePointerId, int headerBgColor, int contentBgColor) {
+        var bgDrawList = NodeEditor.getNodeBackgroundDrawList(nodePointerId);
+        var nodeStyle = NodeEditor.getStyle();
+        var nodeRounding = nodeStyle.getNodeRounding();
+        var nodePadding = nodeStyle.getNodePadding();
+        var nodeSizeX = NodeEditor.getNodeSizeX(nodePointerId);
+
+        // header background - with adjustments to fit the full node width
+        // NOTE: min/max are top-left/bottom-right corners in screen space
+        float headerMinX = headerBounds.min.x - nodePadding.x;
+        float headerMaxX = headerMinX + nodeSizeX;
+        float headerMinY = headerBounds.min.y - nodePadding.y;
+        float headerMaxY = headerMinY + (headerBounds.max.y - headerBounds.min.y + nodePadding.y);
+
+        bgDrawList.addRectFilled(
+            headerMinX, headerMinY, headerMaxX, headerMaxY,
+            headerBgColor, nodeRounding, ImDrawFlags.RoundCornersTop);
+
+        // content background
+        bgDrawList.addRectFilled(
+            contentBounds.min, contentBounds.max,
+            contentBgColor, nodeRounding, ImDrawFlags.RoundCornersBottom);
+
+        // header/content separator - draw after backgrounds so it overlaps
+        bgDrawList.addLine(
+            headerMinX, headerMaxY, headerMaxX, headerMaxY,
+            ImColor.rgb("#8ea687"), 1);
+
     }
 
     public void header(float r, float g, float b, float a) {
+        hasHeader = true;
         headerColor.set(r, g, b, a);
-        setStage(Stage.HEADER);
+        ImGui.beginGroup();
     }
 
     public void endHeader() {
-        setStage(Stage.CONTENT);
+        // add some vertical space
+        ImGui.spacing();
+        ImGui.endGroup();
+        headerBounds = SectionBounds.fromItemRect();
+    }
+
+    public void content() {
+        // 3 columns/groups: inputs - middle - outputs
+        ImGui.beginGroup();
+
+        // start with some vertical space
+        ImGui.spacing();
+        ImGui.spacing();
+    }
+
+    public void endContent() {
+        ImGui.endGroup();
+        contentBounds = SectionBounds.fromItemRect();
+    }
+
+    public void inputs() {
+        ImGui.beginGroup();
+    }
+
+    public void endInputs() {
+        ImGui.endGroup();
+        inputsBounds = SectionBounds.fromItemRect();
+        ImGui.sameLine();
+    }
+
+    public void middle() {
+        ImGui.beginGroup();
+    }
+
+    public void endMiddle() {
+        ImGui.endGroup();
+        middleBounds = SectionBounds.fromItemRect();
+        ImGui.sameLine();
+    }
+
+    public void outputs() {
+        ImGui.beginGroup();
+    }
+
+    public void endOutputs() {
+        ImGui.endGroup();
+        outputsBounds = SectionBounds.fromItemRect();
     }
 
     public void input(Pin pin) {
@@ -128,32 +202,11 @@ public class NodeBuilder {
             return;
         }
 
-        if (stage == Stage.BEGIN) {
-            setStage(Stage.CONTENT);
-        }
-
-        var applyPadding = (stage == Stage.INPUT);
-        setStage(Stage.INPUT);
-
-        if (applyPadding) {
-            float availableWidth = ImGui.getContentRegionAvailX();
-            ImGui.dummy(availableWidth * 0.05f, 0);
-        }
-
-        ImGui.sameLine(0, ImGui.getStyle().getItemInnerSpacingX());
         pin(pin);
     }
 
     public void endInput() {
         endPin();
-    }
-
-    public void middle() {
-        if (stage == Stage.BEGIN) {
-            setStage(Stage.CONTENT);
-        }
-
-        setStage(Stage.MIDDLE);
     }
 
     public void output(Pin pin) {
@@ -162,20 +215,6 @@ public class NodeBuilder {
             return;
         }
 
-        if (stage == Stage.BEGIN) {
-            setStage(Stage.CONTENT);
-        }
-
-        var applyPadding = (stage == Stage.OUTPUT);
-        setStage(Stage.OUTPUT);
-
-        if (applyPadding) {
-            // apply a 'spring' effect by adding a flexible space
-            float availableWidth = ImGui.getContentRegionAvailX();
-            ImGui.dummy(availableWidth * 0.05f, 0);
-        }
-
-        ImGui.sameLine(0, ImGui.getStyle().getItemInnerSpacingX());
         pin(pin);
     }
 
@@ -192,78 +231,14 @@ public class NodeBuilder {
 
         NodeEditor.beginPin(currentPin.pointerId, currentPin.io.pinKind());
         ImGui.pushID(currentPin.pointerId);
-//        ImGui.beginGroup();
+        ImGui.beginGroup();
     }
 
     private void endPin() {
-//        ImGui.endGroup();
+        ImGui.endGroup();
         ImGui.popID();
         NodeEditor.endPin();
 
         currentPin = null;
-    }
-
-    private void setStage(Stage stage) {
-        if (this.stage == stage) {
-            return;
-        }
-
-        var prevStage = this.stage;
-        this.stage = stage;
-
-        switch (prevStage) {
-            case BEGIN, CONTENT, END, INVALID: break;
-            case HEADER: {
-                headerMin.set(ImGui.getItemRectMin());
-                headerMax.set(ImGui.getItemRectMax());
-
-                ImGui.spacing();
-            } break;
-            case INPUT, OUTPUT: {
-                NodeEditor.popStyleVar(2);
-                ImGui.spacing();
-            } break;
-            case MIDDLE: {
-                ImGui.spacing();
-            } break;
-        }
-
-        switch (stage) {
-            case BEGIN, INVALID: break;
-            case HEADER: {
-                if (hasHeader) {
-                    ImGui.spacing();
-                }
-                hasHeader = true;
-            } break;
-            case CONTENT, MIDDLE: {
-                ImGui.dummy(300, 0);
-                ImGui.spacing();
-            } break;
-            case INPUT, OUTPUT: {
-                NodeEditor.pushStyleVar(ImNodesStyleVar.PinOffset, 4);
-                NodeEditor.pushStyleVar(ImNodesStyleVar.PinHoverRadius, 8);
-
-                if (!hasHeader) {
-                    ImGui.sameLine(ImGui.getStyle().getItemSpacingX());
-                }
-            } break;
-            case END: {
-                if (prevStage == Stage.INPUT) {
-                    ImGui.sameLine(ImGui.getStyle().getItemInnerSpacingX());
-                }
-                if (prevStage != Stage.BEGIN) {
-                    ImGui.spacing();
-                }
-
-                contentMin.set(ImGui.getItemRectMin());
-                contentMax.set(ImGui.getItemRectMax());
-
-                ImGui.spacing();
-
-                nodeMin.set(ImGui.getItemRectMin());
-                nodeMax.set(ImGui.getItemRectMax());
-            } break;
-        }
     }
 }

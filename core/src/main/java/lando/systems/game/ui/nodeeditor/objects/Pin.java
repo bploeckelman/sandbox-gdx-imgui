@@ -35,6 +35,10 @@ public class Pin extends NodeEditorObject{
         this(node, Type.FLOW, io);
     }
 
+    public Pin(String name, Node node, IO io) {
+        this(name, node, Type.FLOW, io);
+    }
+
     public Pin(Node node, Type type, IO io) {
         super(nextPinId());
         this.name = STR."\{NAME_PREFIX}\{id}";
