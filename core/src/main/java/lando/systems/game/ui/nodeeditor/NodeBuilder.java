@@ -192,11 +192,11 @@ public class NodeBuilder {
 
         NodeEditor.beginPin(currentPin.pointerId, currentPin.io.pinKind());
         ImGui.pushID(currentPin.pointerId);
-        ImGui.beginGroup();
+//        ImGui.beginGroup();
     }
 
     private void endPin() {
-        ImGui.endGroup();
+//        ImGui.endGroup();
         ImGui.popID();
         NodeEditor.endPin();
 

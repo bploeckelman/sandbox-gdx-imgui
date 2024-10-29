@@ -302,4 +302,9 @@ public class BlueprintEditor extends NodeCanvas {
         links.remove(link);
         objectByPointerId.remove(link.pointerId);
     }
+
+    public boolean canConnect(Pin srcPin, Pin dstPin) {
+        // TODO(brian): add constraints; single/multi connection, type matching, etc...
+        return (srcPin.node.id != dstPin.node.id);
+    }
 }

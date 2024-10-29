@@ -63,7 +63,7 @@ public class EditorPane {
                         for (var pin : node.outputs) {
                             builder.output(pin);
                             ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-                            builder.endInput();
+                            builder.endOutput();
                         }
                     }
                     builder.end();
@@ -81,25 +81,28 @@ public class EditorPane {
                     var b = new ImLong();
                     if (NodeEditor.queryNewLink(a, b) && NodeEditor.acceptNewItem()) {
                         // find the pin for each
-                        var aPin = editor.findPin(a.get()).orElse(null);
-                        var bPin = editor.findPin(b.get()).orElse(null);
+                        var srcPin = editor.findPin(a.get()).orElse(null);
+                        var dstPin = editor.findPin(b.get()).orElse(null);
 
-                        // figure out which is input/output
-                        var valid = (aPin != null && bPin != null && aPin.id != bPin.id);
-                        if (valid) {
-                            // link in the right direction
-                            Pin source = null, target = null;
-                            if (aPin.io == Pin.IO.OUTPUT && bPin.io == Pin.IO.INPUT) {
-                                source = bPin;
-                                target = aPin;
-                            } else if (aPin.io == Pin.IO.INPUT && bPin.io == Pin.IO.OUTPUT) {
-                                source = aPin;
-                                target = bPin;
+                        if (srcPin != null && dstPin != null && srcPin != dstPin) {
+                            var valid = true;
+                            if (srcPin.io == Pin.IO.OUTPUT && dstPin.io == Pin.IO.INPUT) {
+                                // already correct, src(out) -> dst(in)
+                            } else if (srcPin.io == Pin.IO.INPUT && dstPin.io == Pin.IO.OUTPUT) {
+                                // reversed, src(in) <- dst(out); swap pins
+                                var temp = srcPin;
+                                srcPin = dstPin;
+                                dstPin = temp;
+                            } else {
+                                valid = false;
                             }
 
-                            if (source != null && target != null) {
-                                var link = source.connectTo(target);
+                            if (valid && editor.canConnect(srcPin, dstPin)) {
+                                NodeEditor.acceptNewItem();
+                                var link = srcPin.connectTo(dstPin);
                                 editor.addLink(link);
+                            } else {
+                                NodeEditor.rejectNewItem();
                             }
                         }
                     }
