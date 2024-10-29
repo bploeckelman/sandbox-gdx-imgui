@@ -29,7 +29,7 @@ import lando.systems.game.shared.ImGuiPlatform;
 import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.NodeCanvas;
 import lando.systems.game.ui.imnodes.CanvasImNodes;
-import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
+import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -69,7 +69,7 @@ public class Main extends ApplicationAdapter {
 
     ImGuiCore imgui;
     CanvasImNodes canvasImNodes;
-    CanvasNodeEditor canvasNodeEditor;
+    BlueprintEditor canvasNodeEditor;
     Rectangle view = new Rectangle();
 
     NodeCanvas.Type nodeCanvasType = NodeCanvas.Type.NODE_EDITOR;
@@ -79,7 +79,7 @@ public class Main extends ApplicationAdapter {
         Main.game = this;
         this.imgui = new ImGuiCore(imGuiPlatform);
         this.canvasImNodes = new CanvasImNodes(imgui);
-        this.canvasNodeEditor = new CanvasNodeEditor(imgui);
+        this.canvasNodeEditor = new BlueprintEditor(imgui);
     }
 
     @Override

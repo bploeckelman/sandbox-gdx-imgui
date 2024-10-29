@@ -1,5 +1,6 @@
 package lando.systems.game.ui.nodeeditor;
 
+import com.badlogic.gdx.Gdx;
 import com.github.tommyettinger.ds.support.sort.LongComparators;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -28,9 +29,9 @@ import java.util.TreeMap;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-public class CanvasNodeEditor extends NodeCanvas {
+public class BlueprintEditor extends NodeCanvas {
 
-    private static final String TAG = CanvasNodeEditor.class.getSimpleName();
+    private static final String TAG = BlueprintEditor.class.getSimpleName();
     private static final String SETTINGS_FILE = "node-editor.json";
 
     public static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
@@ -53,7 +54,7 @@ public class CanvasNodeEditor extends NodeCanvas {
     public int numSelectedNodes;
     public int numSelectedLinks;
 
-    public CanvasNodeEditor(ImGuiCore imgui) {
+    public BlueprintEditor(ImGuiCore imgui) {
         super(imgui);
         this.nodeTouchTime = new TreeMap<>(LongComparators.NATURAL_COMPARATOR);
         this.showOrdinals = new ImBoolean();
@@ -257,5 +258,17 @@ public class CanvasNodeEditor extends NodeCanvas {
         // java's map interface doesn't allow direct modification
         // of values while iterating, so we'll do it this way...
         nodeTouchTime.replaceAll((id, time) -> (time > 0f) ? (time - dt) : time);
+    }
+
+    public void addNode(Node node) {
+        var _existingNode = findNode(node.pointerId);
+        if (_existingNode.isPresent()) {
+            var existingNode = _existingNode.get();
+            Gdx.app.log(TAG, STR."Failed to add, node already exists: \{existingNode}");
+            return;
+        }
+
+        nodes.add(node);
+        objectByPointerId.put(node.pointerId, node);
     }
 }

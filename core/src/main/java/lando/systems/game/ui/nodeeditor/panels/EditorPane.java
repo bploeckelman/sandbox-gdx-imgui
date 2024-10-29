@@ -7,13 +7,13 @@ import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.Graph;
-import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
+import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 
 public class EditorPane {
 
-    private final CanvasNodeEditor canvasNodeEditor;
+    private final BlueprintEditor canvasNodeEditor;
 
-    public EditorPane(CanvasNodeEditor canvasNodeEditor) {
+    public EditorPane(BlueprintEditor canvasNodeEditor) {
         this.canvasNodeEditor = canvasNodeEditor;
     }
 

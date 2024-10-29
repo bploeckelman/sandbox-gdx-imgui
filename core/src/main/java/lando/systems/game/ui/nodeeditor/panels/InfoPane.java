@@ -8,15 +8,15 @@ import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiWindowFlags;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
-import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
+import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 
 public class InfoPane {
 
-    private final CanvasNodeEditor editor;
+    private final BlueprintEditor editor;
 
     private int selectionChangeCount = 0;
 
-    public InfoPane(CanvasNodeEditor editor) {
+    public InfoPane(BlueprintEditor editor) {
         this.editor = editor;
     }
 
@@ -56,9 +56,9 @@ public class InfoPane {
 
             // new row for repo link
             float buttonFullWidth = ImGui.getWindowWidth() - (2 * spacing) - (2 * padding);
-            var libraryRepoUrl = STR."\{FontAwesomeIcons.ExternalLinkAlt}\{FontAwesomeIcons.CodeBranch}\{CanvasNodeEditor.REPO} ";
+            var libraryRepoUrl = STR."\{FontAwesomeIcons.ExternalLinkAlt}\{FontAwesomeIcons.CodeBranch}\{BlueprintEditor.REPO} ";
             if (ImGui.button(libraryRepoUrl, buttonFullWidth, 0)) {
-                Util.openUrl(CanvasNodeEditor.URL);
+                Util.openUrl(BlueprintEditor.URL);
             }
 
             // new rows for setting toggles
