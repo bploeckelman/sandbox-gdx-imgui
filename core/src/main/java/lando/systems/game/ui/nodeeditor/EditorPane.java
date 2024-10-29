@@ -3,6 +3,7 @@ package lando.systems.game.ui.nodeeditor;
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
+import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.Graph;
@@ -17,10 +18,9 @@ public class EditorPane {
 
     public void render() {
         var graph = canvasNodeEditor.graph;
-        var context = canvasNodeEditor.context;
 
-        ImGui.begin("Editor");
-        {
+        int editorWindowFlags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar;
+        if (ImGui.begin("Editor", editorWindowFlags)) {
             NodeEditor.begin("Node Editor");
             {
                 for (Graph.GraphNode node : graph.nodes.values()) {
@@ -61,40 +61,40 @@ public class EditorPane {
                     }
                 }
 
+                // handle the context menu separate from rendering
                 NodeEditor.suspend();
+                {
+                    var nodeWithContextMenu = NodeEditor.getNodeWithContextMenu();
+                    if (nodeWithContextMenu != -1) {
+                        ImGui.openPopup("node_context");
+                        ImGui.getStateStorage().setInt(ImGui.getID("delete_node_id"), (int) nodeWithContextMenu);
+                    }
 
-                var nodeWithContextMenu = NodeEditor.getNodeWithContextMenu();
-                if (nodeWithContextMenu != -1) {
-                    ImGui.openPopup("node_context");
-                    ImGui.getStateStorage().setInt(ImGui.getID("delete_node_id"), (int) nodeWithContextMenu);
-                }
+                    if (ImGui.isPopupOpen("node_context")) {
+                        var targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
+                        if (ImGui.beginPopup("node_context")) {
+                            if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
+                                graph.nodes.remove(targetNode);
+                                ImGui.closeCurrentPopup();
+                            }
+                            ImGui.endPopup();
+                        }
+                    }
 
-                if (ImGui.isPopupOpen("node_context")) {
-                    var targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
-                    if (ImGui.beginPopup("node_context")) {
-                        if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
-                            graph.nodes.remove(targetNode);
+                    if (NodeEditor.showBackgroundContextMenu()) {
+                        ImGui.openPopup("node_editor_context");
+                    }
+
+                    if (ImGui.beginPopup("node_editor_context")) {
+                        if (ImGui.button("Create New Node")) {
+                            var node = graph.createGraphNode();
+                            var canvas = NodeEditor.screenToCanvas(ImGui.getMousePos());
+                            NodeEditor.setNodePosition(node.nodeId, canvas);
                             ImGui.closeCurrentPopup();
                         }
                         ImGui.endPopup();
                     }
                 }
-
-                if (NodeEditor.showBackgroundContextMenu()) {
-                    ImGui.openPopup("node_editor_context");
-                }
-
-                if (ImGui.beginPopup("node_editor_context")) {
-                    if (ImGui.button("Create New Node")) {
-                        var node = graph.createGraphNode();
-                        var canvas = NodeEditor.screenToCanvas(ImGui.getMousePos());
-                        NodeEditor.setNodePosition(node.nodeId, canvas);
-                        ImGui.closeCurrentPopup();
-                    }
-
-                    ImGui.endPopup();
-                }
-
                 NodeEditor.resume();
             }
             NodeEditor.end();

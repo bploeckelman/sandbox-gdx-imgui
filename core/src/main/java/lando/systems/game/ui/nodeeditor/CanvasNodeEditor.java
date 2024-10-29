@@ -2,13 +2,13 @@ package lando.systems.game.ui.nodeeditor;
 
 import com.github.tommyettinger.ds.support.sort.LongComparators;
 import imgui.ImGui;
+import imgui.ImVec2;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.NodeEditorConfig;
 import imgui.extension.nodeditor.NodeEditorContext;
+import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
-import lando.systems.game.Util;
-import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.Graph;
 import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.NodeCanvas;
@@ -26,9 +26,10 @@ import java.util.stream.Stream;
 public class CanvasNodeEditor extends NodeCanvas {
 
     private static final String TAG = CanvasNodeEditor.class.getSimpleName();
-    private static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
-    private static final String REPO = "thedmd/imgui-node-editor";
     private static final String SETTINGS_FILE = "node-editor.json";
+
+    static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
+    static final String REPO = "thedmd/imgui-node-editor";
 
     private final Map<Long, Float> nodeTouchTime ;
     private final float touchTime = 1f;
@@ -90,39 +91,20 @@ public class CanvasNodeEditor extends NodeCanvas {
 
     @Override
     public void render() {
+        NodeEditor.setCurrentEditor(context);
+        int mainWindowFlags = ImGuiWindowFlags.NoBringToFrontOnFocus
+            | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize;
+
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowTitleAlign, new ImVec2(0.5f, 0.5f));
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
-        ImGui.begin("Blueprint Node Editor", ImGuiWindowFlags.MenuBar);
+        ImGui.begin("Blueprint Node Editor", mainWindowFlags);
         {
-            if (ImGui.beginMenuBar()) {
-                ImGui.sameLine();
-                if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ")) {
-                    // TODO(brian): show a toast or popup modal or something to indicate it was saved
-                    save();
-                }
-                ImGui.sameLine();
-                if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen}Load ")) {
-                    load();
-                }
-                ImGui.sameLine();
-                if (ImGui.button(STR."\{FontAwesomeIcons.SearchLocation}Zoom ")) {
-                    zoomToContent();
-                }
-                ImGui.sameLine();
-                if (ImGui.button(STR."\{FontAwesomeIcons.CodeBranch}\{REPO}/examples ")) {
-                    Util.openUrl(URL);
-                }
-            }
-            ImGui.endMenuBar();
-
-            // make sure the current context is set before rendering anything node related
-            NodeEditor.setCurrentEditor(context);
-
-            // TODO(brian): port split pane widget and use for info and editor panes
+            var cursorScreenPos = ImGui.getCursorScreenPos();
             var availableSize = ImGui.getContentRegionAvail();
             float infoWidth = (1 / 3f) * availableSize.x;
             float editorWidth = availableSize.x - infoWidth;
             float height = availableSize.y;
-            var cursorScreenPos = ImGui.getCursorScreenPos();
 
             ImGui.setNextWindowPos(cursorScreenPos.x, cursorScreenPos.y);
             ImGui.setNextWindowSize(infoWidth, height);
@@ -136,6 +118,7 @@ public class CanvasNodeEditor extends NodeCanvas {
         }
         ImGui.end(); // "Blueprint Node Editor"
         ImGui.popFont();
+        ImGui.popStyleVar(2);
     }
 
     // ------------------------------------------------------------------------

@@ -13,8 +13,6 @@ public class InfoPane {
 
     final CanvasNodeEditor editor;
 
-    final ImVec2 size = new ImVec2();
-
     int selectionChangeCount = 0;
 
     public InfoPane(CanvasNodeEditor editor) {
@@ -27,30 +25,43 @@ public class InfoPane {
         var iconPanelPos = new ImVec2();
         var activeHeaderColor = ImColor.rgba(style.getColors()[ImGuiCol.HeaderActive]);
 
-        if (ImGui.begin("Information", ImGuiWindowFlags.MenuBar)) {
+        int infoWindowFlags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar;
+        if (ImGui.begin("Information", infoWindowFlags)) {
             var drawList = ImGui.getWindowDrawList();
 
-            if (ImGui.beginMenuBar()) {
-                float width = ImGui.getContentRegionAvailX();
-                float spacing = width / 3f;
+            float spacing = style.getItemInnerSpacingX();
+            float padding = style.getFramePaddingX();
+            float buttonWidth = (ImGui.getWindowWidth() - (3 * spacing) - (2 * padding)) / 2f;
 
-                if (ImGui.button(STR."\{FontAwesomeIcons.SearchPlus}Zoom to content ")) {
-                    editor.zoomToContent();
-                }
-
-                ImGui.sameLine(style.getItemInnerSpacingX(), spacing);
-
-                if (ImGui.button("Show flow")) {
-                    for (var link : editor.links) {
-                        editor.flow(link);
-                    }
-                }
-
-                ImGui.sameLine(style.getItemInnerSpacingX(), spacing);
-
-                ImGui.checkbox("Show ordinals", editor.showOrdinals);
+            // new row for load/save buttons
+            if (ImGui.button(STR."\{FontAwesomeIcons.FolderOpen}Load ", buttonWidth, 0)) {
+                editor.load();
             }
-            ImGui.endMenuBar();
+            ImGui.sameLine(0, spacing);
+            if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ", buttonWidth, 0)) {
+                editor.save();
+            }
+
+            // new row for zoom and flow buttons
+            if (ImGui.button(STR."\{FontAwesomeIcons.SearchLocation}Zoom ", buttonWidth, 0)) {
+                editor.zoomToContent();
+            }
+            ImGui.sameLine(0, spacing);
+            if (ImGui.button(STR."\{FontAwesomeIcons.FillDrip}Show flow ", buttonWidth, 0)) {
+                for (var link : editor.links) {
+                    editor.flow(link);
+                }
+            }
+
+            // new row for repo link
+            float buttonFullWidth = ImGui.getWindowWidth() - (2 * spacing) - (2 * padding);
+            var libraryRepoUrl = STR."\{FontAwesomeIcons.ExternalLinkAlt}\{FontAwesomeIcons.CodeBranch}\{CanvasNodeEditor.REPO} ";
+            if (ImGui.button(libraryRepoUrl, buttonFullWidth, 0)) {
+                Util.openUrl(CanvasNodeEditor.URL);
+            }
+
+            // new rows for setting toggles
+            ImGui.checkbox("Show ordinals", editor.showOrdinals);
 
             // node detail rows for each node
             // - background highlight for header
@@ -198,7 +209,7 @@ public class InfoPane {
             // - selection change details
             ImGui.indent();
             {
-                float spacing = ImGui.getWindowWidth() / 2f;
+                spacing = ImGui.getWindowWidth() / 2f;
 
                 var pluralSuffix = (selectionChangeCount == 1) ? "" : "s";
                 ImGui.text(STR."Changed \{selectionChangeCount} time\{pluralSuffix}");
