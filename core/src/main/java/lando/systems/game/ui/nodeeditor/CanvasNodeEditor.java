@@ -13,6 +13,7 @@ import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.NodeCanvas;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,9 +64,12 @@ public class CanvasNodeEditor extends NodeCanvas {
 
     @Override
     public void init() {
+        // NOTE: order matters here, editor context has to be
+        //  created and set current before instantiating panes
         var config = new NodeEditorConfig();
         config.setSettingsFile(SETTINGS_FILE);
         context = NodeEditor.createEditor(config);
+        NodeEditor.setCurrentEditor(context);
 
         infoPane = new InfoPane(this);
         editorPane = new EditorPane(this);
@@ -84,6 +88,8 @@ public class CanvasNodeEditor extends NodeCanvas {
 
     @Override
     public void render() {
+        NodeEditor.setCurrentEditor(context);
+
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
 
         if (ImGui.begin(STR."[\{REPO}]")) {
@@ -170,11 +176,27 @@ public class CanvasNodeEditor extends NodeCanvas {
     }
 
     void updateSelections() {
-        int count = NodeEditor.getSelectedObjectCount();
-        selectedNodes = new long[count];
-        selectedLinks = new long[count];
-        numSelectedNodes = NodeEditor.getSelectedNodes(selectedNodes, count);
-        numSelectedLinks = NodeEditor.getSelectedLinks(selectedLinks, count);
+        // selected objects are tracked together in native code,
+        // so the selected id arrays are always the same length
+        // and can be bigger than the actual counts for either type
+        int totalCount = NodeEditor.getSelectedObjectCount();
+        selectedNodes = new long[totalCount];
+        selectedLinks = new long[totalCount];
+
+        // populate the arrays with the selected object ids and get the counts by type
+        numSelectedNodes = NodeEditor.getSelectedNodes(selectedNodes, totalCount);
+        numSelectedLinks = NodeEditor.getSelectedLinks(selectedLinks, totalCount);
+
+        // (optional) trim the arrays to the actual counts
+        // this is not strictly necessary, but can be useful
+        // so we don't need to remember to iterate using `numSelectedX` counts
+        // instead of `selected[Nodes|Links].length` like one would expect
+        if (numSelectedNodes < totalCount) {
+            selectedNodes = Arrays.copyOf(selectedNodes, numSelectedNodes);
+        }
+        if (numSelectedLinks < totalCount) {
+            selectedLinks = Arrays.copyOf(selectedLinks, numSelectedLinks);
+        }
     }
 
     boolean isSelected(Node node) {
