@@ -1,6 +1,6 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.objects;
 
-import static lando.systems.game.ui.nodeeditor.Link.Default.*;
+import static lando.systems.game.ui.nodeeditor.objects.Link.Default.*;
 
 public class Link extends NodeEditorObject {
 

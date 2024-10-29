@@ -12,6 +12,11 @@ import imgui.type.ImBoolean;
 import lando.systems.game.ui.Graph;
 import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.NodeCanvas;
+import lando.systems.game.ui.nodeeditor.objects.Link;
+import lando.systems.game.ui.nodeeditor.objects.Node;
+import lando.systems.game.ui.nodeeditor.objects.NodeEditorObject;
+import lando.systems.game.ui.nodeeditor.panels.EditorPane;
+import lando.systems.game.ui.nodeeditor.panels.InfoPane;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,27 +33,25 @@ public class CanvasNodeEditor extends NodeCanvas {
     private static final String TAG = CanvasNodeEditor.class.getSimpleName();
     private static final String SETTINGS_FILE = "node-editor.json";
 
-    static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
-    static final String REPO = "thedmd/imgui-node-editor";
+    public static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
+    public static final String REPO = "thedmd/imgui-node-editor";
 
-    private final Map<Long, Float> nodeTouchTime ;
     private final float touchTime = 1f;
+    private final Map<Long, Float> nodeTouchTime ;
+    private final Map<Long, NodeEditorObject> objectByPointerId;
 
-    final Graph graph;
+    public final List<Node> nodes;
+    public final List<Link> links;
+    public final Graph graph;
+    public final ImBoolean showOrdinals;
 
-    final ImBoolean showOrdinals;
-
-    final Map<Long, NodeEditorObject> objectByPointerId;
-    final List<Node> nodes;
-    final List<Link> links;
-
-    NodeEditorContext context;
-    InfoPane infoPane;
-    EditorPane editorPane;
-    long[] selectedNodes;
-    long[] selectedLinks;
-    int numSelectedNodes;
-    int numSelectedLinks;
+    public NodeEditorContext context;
+    public InfoPane infoPane;
+    public EditorPane editorPane;
+    public long[] selectedNodes;
+    public long[] selectedLinks;
+    public int numSelectedNodes;
+    public int numSelectedLinks;
 
     public CanvasNodeEditor(ImGuiCore imgui) {
         super(imgui);
@@ -125,43 +128,43 @@ public class CanvasNodeEditor extends NodeCanvas {
     // Utilities used by externally defined widgets
     // ------------------------------------------------------------------------
 
-    Optional<Node> findNode(long pointerId) {
+    public Optional<Node> findNode(long pointerId) {
         var object = objectByPointerId.get(pointerId);
         return Optional.ofNullable(object)
             .filter(Node.class::isInstance)
             .map(Node.class::cast);
     }
 
-    Optional<Link> findLink(long pointerId) {
+    public Optional<Link> findLink(long pointerId) {
         var object = objectByPointerId.get(pointerId);
         return Optional.ofNullable(object)
             .filter(Link.class::isInstance)
             .map(Link.class::cast);
     }
 
-    Stream<Node> getSelectedNodes() {
+    public Stream<Node> getSelectedNodes() {
         return LongStream.of(selectedNodes)
             .mapToObj(objectByPointerId::get)
             .filter(Node.class::isInstance)
             .map(Node.class::cast);
     }
 
-    Stream<Link> getSelectedLinks() {
+    public Stream<Link> getSelectedLinks() {
         return LongStream.of(selectedLinks)
             .mapToObj(objectByPointerId::get)
             .filter(Link.class::isInstance)
             .map(Link.class::cast);
     }
 
-    void zoomToContent() {
+    public void zoomToContent() {
         NodeEditor.navigateToContent(1);
     }
 
-    void flow(Link link) {
+    public void flow(Link link) {
         // TODO(brian):
     }
 
-    void updateSelections() {
+    public void updateSelections() {
         // selected objects are tracked together in native code,
         // so the selected id arrays are always the same length
         // and can be bigger than the actual counts for either type
@@ -185,7 +188,7 @@ public class CanvasNodeEditor extends NodeCanvas {
         }
     }
 
-    boolean isSelected(Node node) {
+    public boolean isSelected(Node node) {
         for (int i = 0 ; i < numSelectedNodes ; i++) {
             if (selectedNodes[i] == node.pointerId) {
                 return true;
@@ -194,7 +197,7 @@ public class CanvasNodeEditor extends NodeCanvas {
         return false;
     }
 
-    boolean isSelected(Link link) {
+    public boolean isSelected(Link link) {
         for (int i = 0 ; i < numSelectedLinks ; i++) {
             if (selectedLinks[i] == link.pointerId) {
                 return true;
@@ -203,31 +206,31 @@ public class CanvasNodeEditor extends NodeCanvas {
         return false;
     }
 
-    void select(Node node) {
+    public void select(Node node) {
         select(node, false);
     }
 
-    void select(Node node, boolean append) {
+    public void select(Node node, boolean append) {
         NodeEditor.selectNode(node.pointerId, append);
     }
 
-    void deselect(Node node) {
+    public void deselect(Node node) {
         NodeEditor.deselectNode(node.pointerId);
     }
 
-    void navigateToSelection() {
+    public void navigateToSelection() {
         NodeEditor.navigateToSelection();
     }
 
-    void restoreNodeState(Node node) {
+    public void restoreNodeState(Node node) {
         NodeEditor.restoreNodeState(node.pointerId);
     }
 
-    boolean hasSelectionChanged() {
+    public boolean hasSelectionChanged() {
         return NodeEditor.hasSelectionChanged();
     }
 
-    void clearSelection() {
+    public void clearSelection() {
         NodeEditor.clearSelection();
     }
 
@@ -235,14 +238,14 @@ public class CanvasNodeEditor extends NodeCanvas {
     // Node touch handling
     // ------------------------------------------------------------------------
 
-    void touchNode(Node node) {
+    public void touchNode(Node node) {
         nodeTouchTime.put(node.pointerId, touchTime);
     }
 
     /**
      * Convert touch time for the specified node to a percent: 0..1
      */
-    float getTouchProgress(Node node) {
+    public float getTouchProgress(Node node) {
         float time = nodeTouchTime.getOrDefault(node.pointerId, 0f);
         if (time > 0f) {
             return (touchTime - time) / touchTime;
@@ -250,7 +253,7 @@ public class CanvasNodeEditor extends NodeCanvas {
         return time;
     }
 
-    void updateTouch(float dt) {
+    public void updateTouch(float dt) {
         // java's map interface doesn't allow direct modification
         // of values while iterating, so we'll do it this way...
         nodeTouchTime.replaceAll((id, time) -> (time > 0f) ? (time - dt) : time);

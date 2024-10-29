@@ -1,4 +1,4 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.objects;
 
 import imgui.ImColor;
 import imgui.ImVec2;
@@ -6,7 +6,7 @@ import imgui.ImVec2;
 import java.util.ArrayList;
 import java.util.List;
 
-import static lando.systems.game.ui.nodeeditor.Node.Default.*;
+import static lando.systems.game.ui.nodeeditor.objects.Node.Default.*;
 
 public class Node extends NodeEditorObject {
 

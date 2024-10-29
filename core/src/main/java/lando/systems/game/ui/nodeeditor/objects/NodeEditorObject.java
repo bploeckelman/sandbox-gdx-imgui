@@ -1,4 +1,4 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.objects;
 
 public abstract class NodeEditorObject {
 

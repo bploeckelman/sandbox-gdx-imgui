@@ -1,8 +1,8 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.objects;
 
 import imgui.ImColor;
 
-import static lando.systems.game.ui.nodeeditor.Pin.Default.*;
+import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.*;
 
 public class Pin extends NodeEditorObject{
 

@@ -1,4 +1,4 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.panels;
 
 import imgui.ImColor;
 import imgui.ImGui;
@@ -8,12 +8,13 @@ import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiWindowFlags;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
+import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
 
 public class InfoPane {
 
-    final CanvasNodeEditor editor;
+    private final CanvasNodeEditor editor;
 
-    int selectionChangeCount = 0;
+    private int selectionChangeCount = 0;
 
     public InfoPane(CanvasNodeEditor editor) {
         this.editor = editor;

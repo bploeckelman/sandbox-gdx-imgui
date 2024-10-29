@@ -1,4 +1,4 @@
-package lando.systems.game.ui.nodeeditor;
+package lando.systems.game.ui.nodeeditor.panels;
 
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
@@ -7,10 +7,11 @@ import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.Graph;
+import lando.systems.game.ui.nodeeditor.CanvasNodeEditor;
 
 public class EditorPane {
 
-    final CanvasNodeEditor canvasNodeEditor;
+    private final CanvasNodeEditor canvasNodeEditor;
 
     public EditorPane(CanvasNodeEditor canvasNodeEditor) {
         this.canvasNodeEditor = canvasNodeEditor;
