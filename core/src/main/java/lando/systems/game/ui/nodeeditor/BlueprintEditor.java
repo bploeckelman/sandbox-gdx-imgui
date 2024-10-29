@@ -16,6 +16,7 @@ import lando.systems.game.ui.NodeCanvas;
 import lando.systems.game.ui.nodeeditor.objects.Link;
 import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.NodeEditorObject;
+import lando.systems.game.ui.nodeeditor.objects.Pin;
 import lando.systems.game.ui.nodeeditor.panels.EditorPane;
 import lando.systems.game.ui.nodeeditor.panels.InfoPane;
 
@@ -106,7 +107,7 @@ public class BlueprintEditor extends NodeCanvas {
         {
             var cursorScreenPos = ImGui.getCursorScreenPos();
             var availableSize = ImGui.getContentRegionAvail();
-            float infoWidth = (1 / 3f) * availableSize.x;
+            float infoWidth = (1 / 4f) * availableSize.x;
             float editorWidth = availableSize.x - infoWidth;
             float height = availableSize.y;
 
@@ -141,6 +142,13 @@ public class BlueprintEditor extends NodeCanvas {
         return Optional.ofNullable(object)
             .filter(Link.class::isInstance)
             .map(Link.class::cast);
+    }
+
+    public Optional<Pin> findPin(long pointerId) {
+        var object = objectByPointerId.get(pointerId);
+        return Optional.ofNullable(object)
+            .filter(Pin.class::isInstance)
+            .map(Pin.class::cast);
     }
 
     public Stream<Node> getSelectedNodes() {
@@ -270,5 +278,28 @@ public class BlueprintEditor extends NodeCanvas {
 
         nodes.add(node);
         objectByPointerId.put(node.pointerId, node);
+    }
+
+    public void addPin(Pin pin) {
+        objectByPointerId.put(pin.pointerId, pin);
+    }
+
+    public void addLink(Link link) {
+        links.add(link);
+        objectByPointerId.put(link.pointerId, link);
+    }
+
+    public void removeNode(Node node) {
+        nodes.remove(node);
+        objectByPointerId.remove(node.pointerId);
+    }
+
+    public void removePin(Pin pin) {
+        objectByPointerId.remove(pin.pointerId);
+    }
+
+    public void removeLink(Link link) {
+        links.remove(link);
+        objectByPointerId.remove(link.pointerId);
     }
 }

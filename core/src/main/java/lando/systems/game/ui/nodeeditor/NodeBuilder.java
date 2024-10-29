@@ -1,5 +1,6 @@
 package lando.systems.game.ui.nodeeditor;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import imgui.ImColor;
 import imgui.ImGui;
@@ -7,10 +8,14 @@ import imgui.ImVec2;
 import imgui.ImVec4;
 import imgui.extension.imnodes.flag.ImNodesStyleVar;
 import imgui.extension.nodeditor.NodeEditor;
+import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 import imgui.flag.ImDrawFlags;
 import lando.systems.game.ui.nodeeditor.objects.Node;
+import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 public class NodeBuilder {
+
+    private static final String TAG = NodeBuilder.class.getSimpleName();
 
     enum Stage { INVALID, BEGIN, HEADER, CONTENT, INPUT, MIDDLE, OUTPUT, END }
 
@@ -18,6 +23,7 @@ public class NodeBuilder {
 
     private Stage stage;
     private Node currentNode;
+    private Pin currentPin;
     private boolean hasHeader;
     private ImVec4 headerColor;
     private ImVec2 nodeMin;
@@ -32,6 +38,7 @@ public class NodeBuilder {
         this.editor = blueprintEditor;
         this.stage = Stage.INVALID;
         this.currentNode = null;
+        this.currentPin = null;
         this.headerColor = new ImVec4(1, 1, 1, 1);
         this.hasHeader = false;
         this.nodeMin = new ImVec2();
@@ -47,21 +54,24 @@ public class NodeBuilder {
         return stage;
     }
 
-    public void begin() {
+    public void begin(Node node) {
         hasHeader = false;
         headerMin.set(0, 0);
         headerMax.set(0, 0);
 
-        currentNode = new Node();
-        NodeEditor.pushStyleVar(ImNodesStyleVar.NodePadding, new ImVec4(8, 4, 8, 8));
+        currentNode = node;
+
+        NodeEditor.pushStyleVar(ImNodesStyleVar.NodePadding, 8);
+        NodeEditor.pushStyleVar(ImNodesStyleVar.NodeBorderThickness, 2);
+
         NodeEditor.beginNode(currentNode.pointerId);
         ImGui.pushID(currentNode.pointerId);
 
-        stage = Stage.BEGIN;
+        setStage(Stage.BEGIN);
     }
 
     public void end() {
-        stage = Stage.END;
+        setStage(Stage.END);
 
         NodeEditor.endNode();
 
@@ -96,51 +106,164 @@ public class NodeBuilder {
         }
 
         ImGui.popID();
-        NodeEditor.popStyleVar();
+        NodeEditor.popStyleVar(2);
 
-        editor.addNode(currentNode);
         currentNode = null;
 
-        stage = Stage.INVALID;
+        setStage(Stage.INVALID);
     }
 
     public void header(float r, float g, float b, float a) {
         headerColor.set(r, g, b, a);
-        stage = Stage.HEADER;
+        setStage(Stage.HEADER);
     }
 
     public void endHeader() {
-        stage = Stage.CONTENT;
+        setStage(Stage.CONTENT);
     }
 
-    public void input() {
-        // TODO(brian): ...
+    public void input(Pin pin) {
+        if (pin == null) {
+            Gdx.app.log(TAG, "NodeBuilder.input: invalid pin");
+            return;
+        }
+
+        if (stage == Stage.BEGIN) {
+            setStage(Stage.CONTENT);
+        }
+
+        var applyPadding = (stage == Stage.INPUT);
+        setStage(Stage.INPUT);
+
+        if (applyPadding) {
+            float availableWidth = ImGui.getContentRegionAvailX();
+            ImGui.dummy(availableWidth * 0.05f, 0);
+        }
+
+        ImGui.sameLine(0, ImGui.getStyle().getItemInnerSpacingX());
+        pin(pin);
     }
 
     public void endInput() {
-        // TODO(brian): ...
+        endPin();
     }
 
-    public void Middle() {
-        // TODO(brian): ...
+    public void middle() {
+        if (stage == Stage.BEGIN) {
+            setStage(Stage.CONTENT);
+        }
+
+        setStage(Stage.MIDDLE);
     }
 
-    // TODO(brian): endMiddle()?
+    public void output(Pin pin) {
+        if (pin == null) {
+            Gdx.app.log(TAG, "NodeBuilder.output: invalid pin");
+            return;
+        }
 
-    public void output() {
-        // TODO(brian): ...
+        if (stage == Stage.BEGIN) {
+            setStage(Stage.CONTENT);
+        }
+
+        var applyPadding = (stage == Stage.OUTPUT);
+        setStage(Stage.OUTPUT);
+
+        if (applyPadding) {
+            // apply a 'spring' effect by adding a flexible space
+            float availableWidth = ImGui.getContentRegionAvailX();
+            ImGui.dummy(availableWidth * 0.05f, 0);
+        }
+
+        ImGui.sameLine(0, ImGui.getStyle().getItemInnerSpacingX());
+        pin(pin);
     }
 
     public void endOutput() {
-        // TODO(brian): ...
+        endPin();
     }
 
-    private void pin() {
-        // TODO(brian): ...
+    private void pin(Pin pin) {
+        if (currentNode == null || currentPin != null) {
+            Gdx.app.log(TAG, "NodeBuilder.pin: invalid state");
+            return;
+        }
+        currentPin = pin;
+
+        NodeEditor.beginPin(currentPin.pointerId, currentPin.io.pinKind());
+        ImGui.pushID(currentPin.pointerId);
+        ImGui.beginGroup();
     }
 
     private void endPin() {
-        // TODO(brian): ...
+        ImGui.endGroup();
+        ImGui.popID();
+        NodeEditor.endPin();
+
+        currentPin = null;
     }
 
+    private void setStage(Stage stage) {
+        if (this.stage == stage) {
+            return;
+        }
+
+        var prevStage = this.stage;
+        this.stage = stage;
+
+        switch (prevStage) {
+            case BEGIN, CONTENT, END, INVALID: break;
+            case HEADER: {
+                headerMin.set(ImGui.getItemRectMin());
+                headerMax.set(ImGui.getItemRectMax());
+
+                ImGui.spacing();
+            } break;
+            case INPUT, OUTPUT: {
+                NodeEditor.popStyleVar(2);
+                ImGui.spacing();
+            } break;
+            case MIDDLE: {
+                ImGui.spacing();
+            } break;
+        }
+
+        switch (stage) {
+            case BEGIN, INVALID: break;
+            case HEADER: {
+                if (hasHeader) {
+                    ImGui.spacing();
+                }
+                hasHeader = true;
+            } break;
+            case CONTENT, MIDDLE: {
+                ImGui.dummy(300, 0);
+                ImGui.spacing();
+            } break;
+            case INPUT, OUTPUT: {
+                NodeEditor.pushStyleVar(ImNodesStyleVar.PinOffset, 4);
+                NodeEditor.pushStyleVar(ImNodesStyleVar.PinHoverRadius, 8);
+
+                if (!hasHeader) {
+                    ImGui.sameLine(ImGui.getStyle().getItemSpacingX());
+                }
+            } break;
+            case END: {
+                if (prevStage == Stage.INPUT) {
+                    ImGui.sameLine(ImGui.getStyle().getItemInnerSpacingX());
+                }
+                if (prevStage != Stage.BEGIN) {
+                    ImGui.spacing();
+                }
+
+                contentMin.set(ImGui.getItemRectMin());
+                contentMax.set(ImGui.getItemRectMax());
+
+                ImGui.spacing();
+
+                nodeMin.set(ImGui.getItemRectMin());
+                nodeMax.set(ImGui.getItemRectMax());
+            } break;
+        }
+    }
 }

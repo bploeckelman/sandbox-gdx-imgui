@@ -1,6 +1,7 @@
 package lando.systems.game.ui.nodeeditor.objects;
 
 import imgui.ImColor;
+import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 
 import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.*;
 
@@ -12,14 +13,27 @@ public class Pin extends NodeEditorObject{
     }
 
     public enum Type { FLOW, BOOL, INT, FLOAT, STR, OBJ, FUNC }
-    public enum IO { INPUT, OUTPUT }
+    public enum IO { INPUT, OUTPUT;
+
+        public int pinKind() {
+            return switch (this) {
+                case INPUT -> NodeEditorPinKind.Input;
+                case OUTPUT -> NodeEditorPinKind.Output;
+            };
+        }
+    }
 
     public final String name;
     public final Node node;
-    public final Type type;
     public final IO io;
 
+    public Type type;
+
     public int color = COLOR;
+
+    public Pin(Node node, IO io) {
+        this(node, Type.FLOW, io);
+    }
 
     public Pin(Node node, Type type, IO io) {
         super(nextPinId());
@@ -27,6 +41,10 @@ public class Pin extends NodeEditorObject{
         this.node = node;
         this.type = type;
         this.io = io;
+        switch (io) {
+            case INPUT -> node.inputs.add(this);
+            case OUTPUT -> node.outputs.add(this);
+        }
     }
 
     public Pin(String name, Node node, Type type, IO io) {
@@ -35,6 +53,14 @@ public class Pin extends NodeEditorObject{
         this.node = node;
         this.type = type;
         this.io = io;
+        switch (io) {
+            case INPUT -> node.inputs.add(this);
+            case OUTPUT -> node.outputs.add(this);
+        }
+    }
+
+    public Link connectTo(Pin target) {
+        return new Link(this, target);
     }
 
     @Override

@@ -237,23 +237,24 @@ public class Main extends ApplicationAdapter {
             float row1 = 0.2f;
             float row2 = 1 - row1;
             ImGui.setNextWindowPos(view.x, view.y, ImGuiCond.Always);
-            ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
+//            ImGui.setNextWindowSize(view.width * col1, view.height, ImGuiCond.Always);
+            ImGui.setNextWindowSize(view.width, view.height, ImGuiCond.Always);
             ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 10f);
             nodeCanvas.render();
             ImGui.popStyleVar();
 
-            ImGui.setNextWindowPos(view.x + view.width * col1, view.y + view.height * row1, ImGuiCond.Always);
-            ImGui.setNextWindowSize(view.width * col2, view.height * row2, ImGuiCond.Always);
-            ImGui.showMetricsWindow();
-
-            ImGui.setNextWindowPos(view.x + view.width * col1, view.y, ImGuiCond.Always);
-            ImGui.setNextWindowSize(view.width * col2, view.height * row1, ImGuiCond.Always);
-            ImGui.begin("Hello, gui!");
-            ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
-            if (ImGui.button(STR."\{FontAwesomeIcons.MousePointer} Click me!")) {
-                Gdx.app.log("ImGui", "Button clicked!");
-            }
-            ImGui.end();
+//            ImGui.setNextWindowPos(view.x + view.width * col1, view.y + view.height * row1, ImGuiCond.Always);
+//            ImGui.setNextWindowSize(view.width * col2, view.height * row2, ImGuiCond.Always);
+//            ImGui.showMetricsWindow();
+//
+//            ImGui.setNextWindowPos(view.x + view.width * col1, view.y, ImGuiCond.Always);
+//            ImGui.setNextWindowSize(view.width * col2, view.height * row1, ImGuiCond.Always);
+//            ImGui.begin("Hello, gui!");
+//            ImGui.text("Maybe this will have 20 percent fewer headaches than scene2d");
+//            if (ImGui.button(STR."\{FontAwesomeIcons.MousePointer} Click me!")) {
+//                Gdx.app.log("ImGui", "Button clicked!");
+//            }
+//            ImGui.end();
 
 //            ImGui.showDemoWindow();
         }

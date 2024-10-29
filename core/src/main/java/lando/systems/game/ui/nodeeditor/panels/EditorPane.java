@@ -3,98 +3,236 @@ package lando.systems.game.ui.nodeeditor.panels;
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
+import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.Graph;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
+import lando.systems.game.ui.nodeeditor.NodeBuilder;
+import lando.systems.game.ui.nodeeditor.objects.Node;
+import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 public class EditorPane {
 
-    private final BlueprintEditor canvasNodeEditor;
+    private final BlueprintEditor editor;
+    private final NodeBuilder builder;
 
-    public EditorPane(BlueprintEditor canvasNodeEditor) {
-        this.canvasNodeEditor = canvasNodeEditor;
+    public EditorPane(BlueprintEditor blueprintEditor) {
+        this.editor = blueprintEditor;
+        this.builder = new NodeBuilder(editor);
+        init();
+    }
+
+    public void init() {
+        for (int i = 0; i < 3; i++) {
+            var node = new Node();
+            editor.addNode(node);
+            for (int j = 0; j < 2; j++) {
+                var iPin = new Pin(node, Pin.IO.INPUT);
+                var oPin = new Pin(node, Pin.IO.OUTPUT);
+                editor.addPin(iPin);
+                editor.addPin(oPin);
+            }
+        }
     }
 
     public void render() {
-        var graph = canvasNodeEditor.graph;
+        var graph = editor.graph;
 
         int editorWindowFlags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar;
         if (ImGui.begin("Editor", editorWindowFlags)) {
             NodeEditor.begin("Node Editor");
             {
-                for (Graph.GraphNode node : graph.nodes.values()) {
-                    NodeEditor.beginNode(node.nodeId);
+                // render the nodes
+                for (var node : editor.nodes) {
+                    builder.begin(node);
+                    {
+                        builder.header(1f, 0f, 1f, 1f);
+                        ImGui.text(node.name);
+                        builder.endHeader();
 
-                    ImGui.text(node.getName());
+                        for (var pin : node.inputs) {
+                            builder.input(pin);
+                            ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
+                            builder.endInput();
+                        }
 
-                    NodeEditor.beginPin(node.getInputPinId(), NodeEditorPinKind.Input);
-                    ImGui.text(STR."\{FontAwesomeIcons.ArrowCircleRight} In");
-                    NodeEditor.endPin();
+                        builder.middle();
 
-                    ImGui.sameLine();
-
-                    NodeEditor.beginPin(node.getOutputPinId(), NodeEditorPinKind.Output);
-                    ImGui.text(STR."Out \{FontAwesomeIcons.ArrowCircleRight}");
-                    NodeEditor.endPin();
-
-                    NodeEditor.endNode();
+                        for (var pin : node.outputs) {
+                            builder.output(pin);
+                            ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
+                            builder.endInput();
+                        }
+                    }
+                    builder.end();
                 }
 
+                // render the links
+                for (var link : editor.links) {
+                    NodeEditor.link(link.pointerId, link.source.pointerId, link.target.pointerId);
+                }
+
+                // handle creating links between node pins
+                // TODO(brian): needs to be fleshed out
                 if (NodeEditor.beginCreate()) {
                     var a = new ImLong();
                     var b = new ImLong();
-                    if (NodeEditor.queryNewLink(a, b)) {
-                        var source = graph.findByOutput(a.get());
-                        var target = graph.findByInput(b.get());
-                        if (source != null && target != null && source.outputNodeId != target.nodeId && NodeEditor.acceptNewItem()) {
-                            source.outputNodeId = target.nodeId;
+                    if (NodeEditor.queryNewLink(a, b) && NodeEditor.acceptNewItem()) {
+                        // find the pin for each
+                        var aPin = editor.findPin(a.get()).orElse(null);
+                        var bPin = editor.findPin(b.get()).orElse(null);
+
+                        // figure out which is input/output
+                        var valid = (aPin != null && bPin != null && aPin.id != bPin.id);
+                        if (valid) {
+                            // link in the right direction
+                            Pin source = null, target = null;
+                            if (aPin.io == Pin.IO.OUTPUT && bPin.io == Pin.IO.INPUT) {
+                                source = bPin;
+                                target = aPin;
+                            } else if (aPin.io == Pin.IO.INPUT && bPin.io == Pin.IO.OUTPUT) {
+                                source = aPin;
+                                target = bPin;
+                            }
+
+                            if (source != null && target != null) {
+                                var link = source.connectTo(target);
+                                editor.addLink(link);
+                            }
                         }
                     }
                 }
                 NodeEditor.endCreate();
 
-                int uniqueLinkId = 1;
-                for (var node : graph.nodes.values()) {
-                    if (graph.nodes.containsKey(node.outputNodeId)) {
-                        NodeEditor.link(uniqueLinkId++, node.getOutputPinId(), graph.nodes.get(node.outputNodeId).getInputPinId());
+                // handle deleting nodes and links
+                NodeEditor.beginDelete();
+                {
+                    var pointerId = new ImLong();
+                    while (NodeEditor.queryDeletedNode(pointerId)) {
+                        if (NodeEditor.acceptDeletedItem()) {
+                            editor.findNode(pointerId.get()).ifPresent(editor::removeNode);
+                        }
+                    }
+                    while (NodeEditor.queryDeletedLink(pointerId)) {
+                        if (NodeEditor.acceptDeletedItem()) {
+                            editor.findLink(pointerId.get()).ifPresent(editor::removeLink);
+                        }
                     }
                 }
+                NodeEditor.endDelete();
 
                 // handle the context menu separate from rendering
                 NodeEditor.suspend();
                 {
-                    var nodeWithContextMenu = NodeEditor.getNodeWithContextMenu();
-                    if (nodeWithContextMenu != -1) {
-                        ImGui.openPopup("node_context");
-                        ImGui.getStateStorage().setInt(ImGui.getID("delete_node_id"), (int) nodeWithContextMenu);
+                    var nodePointerId = new ImLong();
+                    var pinPointerId = new ImLong();
+                    var linkPointerId = new ImLong();
+
+                    if (NodeEditor.showNodeContextMenu(nodePointerId)) {
+                        ImGui.openPopup("node-context");
+                    } else if (NodeEditor.showPinContextMenu(pinPointerId)) {
+                        ImGui.openPopup("pin-context");
+                    } else if (NodeEditor.showLinkContextMenu(linkPointerId)) {
+                        ImGui.openPopup("link-context");
+                    } else if (NodeEditor.showBackgroundContextMenu()) {
+                        ImGui.openPopup("create-node");
                     }
 
-                    if (ImGui.isPopupOpen("node_context")) {
-                        var targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
-                        if (ImGui.beginPopup("node_context")) {
-                            if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
-                                graph.nodes.remove(targetNode);
-                                ImGui.closeCurrentPopup();
+                    ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 8f);
+                    if (ImGui.beginPopup("node-context")) {
+                        var node = editor.findNode(nodePointerId.get()).orElse(null);
+
+                        ImGui.text("Node Context Menu");
+                        ImGui.separator();
+                        if (node != null) {
+                            ImGui.text(STR."Node: \{node.name}");
+                            ImGui.text(STR."Inputs: \{node.inputs.size()}");
+                            ImGui.text(STR."Outputs: \{node.outputs.size()}");
+                            ImGui.separator();
+                            if (ImGui.menuItem("Delete")) {
+                                editor.removeNode(node);
                             }
-                            ImGui.endPopup();
+                        } else {
+                            ImGui.text("Unknown node");
                         }
-                    }
+                        ImGui.endPopup();
+                    } else if (ImGui.beginPopup("pin-context")) {
+                        var pin = editor.findPin(pinPointerId.get()).orElse(null);
 
-                    if (NodeEditor.showBackgroundContextMenu()) {
-                        ImGui.openPopup("node_editor_context");
-                    }
+                        ImGui.text("Pin Context Menu");
+                        ImGui.separator();
+                        if (pin != null) {
+                            ImGui.text(STR."Pin: \{pin.name}");
+                            ImGui.text(STR."Node: \{pin.node.name}");
+                            ImGui.separator();
+                            if (ImGui.menuItem("Delete")) {
+                                editor.removePin(pin);
+                            }
+                        } else {
+                            ImGui.text("Unknown pin");
+                        }
+                        ImGui.endPopup();
+                    } else if (ImGui.beginPopup("link-context")) {
+                        var link = editor.findLink(linkPointerId.get()).orElse(null);
 
-                    if (ImGui.beginPopup("node_editor_context")) {
-                        if (ImGui.button("Create New Node")) {
-                            var node = graph.createGraphNode();
-                            var canvas = NodeEditor.screenToCanvas(ImGui.getMousePos());
-                            NodeEditor.setNodePosition(node.nodeId, canvas);
-                            ImGui.closeCurrentPopup();
+                        ImGui.text("Link Context Menu");
+                        ImGui.separator();
+                        if (link != null) {
+                            ImGui.text(STR."Link: \{link.pointerId}");
+                            ImGui.text(STR."Source: \{link.source.pointerId}");
+                            ImGui.text(STR."Target: \{link.target.pointerId}");
+                            ImGui.separator();
+                            if (ImGui.menuItem("Delete")) {
+                                editor.removeLink(link);
+                            }
+                        } else {
+                            ImGui.text("Unknown link");
+                        }
+                        ImGui.endPopup();
+                    } else if (ImGui.beginPopup("create-node")) {
+                        if (ImGui.selectable("Create Node")) {
+                            // TODO(brian): flesh out the node creation menu substantially,
+                            //  different types of nodes, different numbers of pins, etc...
+                            var node = new Node();
+                            editor.addNode(node);
                         }
                         ImGui.endPopup();
                     }
+                    ImGui.popStyleVar();
+
+
+//                    var nodeWithContextMenu = NodeEditor.getNodeWithContextMenu();
+//                    if (nodeWithContextMenu != -1) {
+//                        ImGui.openPopup("node_context");
+//                        ImGui.getStateStorage().setInt(ImGui.getID("delete_node_id"), (int) nodeWithContextMenu);
+//                    }
+//
+//                    if (ImGui.isPopupOpen("node_context")) {
+//                        var targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
+//                        if (ImGui.beginPopup("node_context")) {
+//                            if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
+//                                graph.nodes.remove(targetNode);
+//                                ImGui.closeCurrentPopup();
+//                            }
+//                            ImGui.endPopup();
+//                        }
+//                    }
+//
+//                    if (NodeEditor.showBackgroundContextMenu()) {
+//                        ImGui.openPopup("node_editor_context");
+//                    }
+//
+//                    if (ImGui.beginPopup("node_editor_context")) {
+//                        if (ImGui.button("Create New Node")) {
+//                            var node = graph.createGraphNode();
+//                            var canvas = NodeEditor.screenToCanvas(ImGui.getMousePos());
+//                            NodeEditor.setNodePosition(node.nodeId, canvas);
+//                            ImGui.closeCurrentPopup();
+//                        }
+//                        ImGui.endPopup();
+//                    }
                 }
                 NodeEditor.resume();
             }
