@@ -3,6 +3,7 @@ package lando.systems.game.ui.nodeeditor;
 import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
+import imgui.extension.nodeditor.NodeEditor;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiKey;
 import lando.systems.game.Util;
@@ -20,16 +21,15 @@ public class InfoPane {
         this.editor = editor;
     }
 
-    public void render(float width) {
+    public void render() {
         var io = ImGui.getIO();
+        NodeEditor.setCurrentEditor(editor.context);
 
-        ImGui.beginChild("info-pane", size.set(width, ImGui.getFrameHeight()));
-        {
+        if (ImGui.begin("info-pane")) {
             // setup spacing for buttons in row
-            width = ImGui.getContentRegionAvailX();
+            float width = ImGui.getContentRegionAvailX();
 
-            ImGui.beginChild("menubar", size.set(width, 0));
-            {
+            if (ImGui.begin("menubar")) {//, size.set(width, 0))) {
                 float spacing = width / 3f;
 
                 if (ImGui.button(STR."\{FontAwesomeIcons.SearchPlus}Zoom to content ")) {
@@ -47,7 +47,7 @@ public class InfoPane {
                 ImGui.checkbox("Show ordinals", editor.showOrdinals);
                 editor.updateSelections();
             }
-            ImGui.endChild();
+            ImGui.end();
 
             // setup some vars that will be used for the remaining layout
             var drawList = ImGui.getWindowDrawList();
@@ -176,8 +176,7 @@ public class InfoPane {
             drawList.addRectFilled(cursorScreenPos, size, activeHeaderColor, lineHeight * 0.25f);
             ImGui.spacing(); ImGui.sameLine();
             ImGui.text("Selection");
-            ImGui.beginChild("Selection Stats", size.set(width, 0));
-            {
+            if (ImGui.begin("Selection Stats")) {//, size.set(width, 0))) {
                 float spacing = width / 2f;
 
                 var pluralSuffix = (selectionChangeCount == 1) ? "" : "s";
@@ -188,7 +187,7 @@ public class InfoPane {
                     editor.clearSelection();
                 }
             }
-            ImGui.endChild();
+            ImGui.end();
 
             // selected objects
             ImGui.indent();
@@ -210,6 +209,6 @@ public class InfoPane {
                 selectionChangeCount++;
             }
         }
-        ImGui.endChild();
+        ImGui.end();
     }
 }

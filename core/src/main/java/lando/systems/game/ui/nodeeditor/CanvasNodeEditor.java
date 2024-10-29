@@ -88,17 +88,13 @@ public class CanvasNodeEditor extends NodeCanvas {
 
     @Override
     public void render() {
-        NodeEditor.setCurrentEditor(context);
-
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
-
         if (ImGui.begin(STR."[\{REPO}]")) {
             ImGui.alignTextToFramePadding();
 
             ImGui.text("FPS: %.1f".formatted(ImGui.getIO().getFramerate()));
 
-            ImGui.beginChild("main-menu");
-            {
+            if (ImGui.begin("main-menu")) {
                 if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ")) {
                     // TODO(brian): show a toast or popup modal or something to indicate it was saved
                     save();
@@ -116,22 +112,25 @@ public class CanvasNodeEditor extends NodeCanvas {
                     Util.openUrl(URL);
                 }
             }
-            ImGui.endChild();
+            ImGui.end();
 
             // TODO(brian): port split pane widget and use for info and editor panes
-            ImGui.beginChild("main-content");
-            {
+            if (ImGui.begin("main-content")) {
                 float availableWidth = ImGui.getContentRegionAvailX();
                 float infoWidth = (1 / 3f) * availableWidth;
                 float editorWidth = availableWidth - infoWidth;
 
-                infoPane.render(infoWidth);
+                ImGui.setNextWindowPos(0, 0);
+                ImGui.setNextWindowSize(infoWidth, ImGui.getWindowHeight());
+                infoPane.render();
+
+                ImGui.setNextWindowPos(infoWidth, 0);
+                ImGui.setNextWindowSize(editorWidth, ImGui.getWindowHeight());
                 editorPane.render(editorWidth);
             }
-            ImGui.endChild();
+            ImGui.end();
         }
         ImGui.end();
-
         ImGui.popFont();
     }
 
