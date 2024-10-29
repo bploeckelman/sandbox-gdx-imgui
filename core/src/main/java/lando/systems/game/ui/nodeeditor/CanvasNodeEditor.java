@@ -5,6 +5,7 @@ import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.NodeEditorConfig;
 import imgui.extension.nodeditor.NodeEditorContext;
+import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
@@ -84,17 +85,16 @@ public class CanvasNodeEditor extends NodeCanvas {
     public void update() {
         float dt = ImGui.getIO().getDeltaTime();
         updateTouch(dt);
+        updateSelections();
     }
 
     @Override
     public void render() {
         ImGui.pushFont(imgui.getFont("Play-Regular.ttf"));
-        if (ImGui.begin(STR."[\{REPO}]")) {
-            ImGui.alignTextToFramePadding();
-
-            ImGui.text("FPS: %.1f".formatted(ImGui.getIO().getFramerate()));
-
-            if (ImGui.begin("main-menu")) {
+        ImGui.begin("Blueprint Node Editor", ImGuiWindowFlags.MenuBar);
+        {
+            if (ImGui.beginMenuBar()) {
+                ImGui.sameLine();
                 if (ImGui.button(STR."\{FontAwesomeIcons.Save}Save ")) {
                     // TODO(brian): show a toast or popup modal or something to indicate it was saved
                     save();
@@ -112,25 +112,29 @@ public class CanvasNodeEditor extends NodeCanvas {
                     Util.openUrl(URL);
                 }
             }
-            ImGui.end();
+            ImGui.endMenuBar();
+
+            // make sure the current context is set before rendering anything node related
+            NodeEditor.setCurrentEditor(context);
 
             // TODO(brian): port split pane widget and use for info and editor panes
-            if (ImGui.begin("main-content")) {
-                float availableWidth = ImGui.getContentRegionAvailX();
-                float infoWidth = (1 / 3f) * availableWidth;
-                float editorWidth = availableWidth - infoWidth;
+            var availableSize = ImGui.getContentRegionAvail();
+            float infoWidth = (1 / 3f) * availableSize.x;
+            float editorWidth = availableSize.x - infoWidth;
+            float height = availableSize.y;
+            var cursorScreenPos = ImGui.getCursorScreenPos();
 
-                ImGui.setNextWindowPos(0, 0);
-                ImGui.setNextWindowSize(infoWidth, ImGui.getWindowHeight());
-                infoPane.render();
+            ImGui.setNextWindowPos(cursorScreenPos.x, cursorScreenPos.y);
+            ImGui.setNextWindowSize(infoWidth, height);
+            infoPane.render();
 
-                ImGui.setNextWindowPos(infoWidth, 0);
-                ImGui.setNextWindowSize(editorWidth, ImGui.getWindowHeight());
-                editorPane.render(editorWidth);
-            }
-            ImGui.end();
+            ImGui.sameLine();
+
+            ImGui.setNextWindowPos(cursorScreenPos.x + infoWidth, cursorScreenPos.y);
+            ImGui.setNextWindowSize(editorWidth, height);
+            editorPane.render();
         }
-        ImGui.end();
+        ImGui.end(); // "Blueprint Node Editor"
         ImGui.popFont();
     }
 

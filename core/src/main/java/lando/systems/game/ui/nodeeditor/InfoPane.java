@@ -3,9 +3,9 @@ package lando.systems.game.ui.nodeeditor;
 import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
-import imgui.extension.nodeditor.NodeEditor;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiKey;
+import imgui.flag.ImGuiWindowFlags;
 import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 
@@ -23,51 +23,56 @@ public class InfoPane {
 
     public void render() {
         var io = ImGui.getIO();
-        NodeEditor.setCurrentEditor(editor.context);
+        var style = ImGui.getStyle();
+        var iconPanelPos = new ImVec2();
+        var activeHeaderColor = ImColor.rgba(style.getColors()[ImGuiCol.HeaderActive]);
 
-        if (ImGui.begin("info-pane")) {
-            // setup spacing for buttons in row
-            float width = ImGui.getContentRegionAvailX();
+        if (ImGui.begin("Information", ImGuiWindowFlags.MenuBar)) {
+            var drawList = ImGui.getWindowDrawList();
 
-            if (ImGui.begin("menubar")) {//, size.set(width, 0))) {
+            if (ImGui.beginMenuBar()) {
+                float width = ImGui.getContentRegionAvailX();
                 float spacing = width / 3f;
 
                 if (ImGui.button(STR."\{FontAwesomeIcons.SearchPlus}Zoom to content ")) {
                     editor.zoomToContent();
                 }
 
-                ImGui.sameLine(0, spacing);
+                ImGui.sameLine(style.getItemInnerSpacingX(), spacing);
+
                 if (ImGui.button("Show flow")) {
                     for (var link : editor.links) {
                         editor.flow(link);
                     }
                 }
 
-                ImGui.sameLine(0, spacing);
-                ImGui.checkbox("Show ordinals", editor.showOrdinals);
-                editor.updateSelections();
-            }
-            ImGui.end();
+                ImGui.sameLine(style.getItemInnerSpacingX(), spacing);
 
-            // setup some vars that will be used for the remaining layout
-            var drawList = ImGui.getWindowDrawList();
-            var lineHeight = ImGui.getTextLineHeight();
-            var cursorScreenPos = ImGui.getCursorScreenPos();
+                ImGui.checkbox("Show ordinals", editor.showOrdinals);
+            }
+            ImGui.endMenuBar();
 
             // node detail rows for each node
-            var iconPanelPos = new ImVec2();
-            var size = cursorScreenPos.plus(width, lineHeight);
-            var activeHeaderColor = ImColor.rgba(ImGui.getStyle().getColors()[ImGuiCol.HeaderActive]);
-            drawList.addRectFilled(cursorScreenPos, size, activeHeaderColor, lineHeight * 0.25f);
+            // - background highlight for header
+            var lineHeight = ImGui.getTextLineHeight();
+            var cursorScreenPos = ImGui.getCursorScreenPos();
+            drawList.addRectFilled(
+                cursorScreenPos.x, cursorScreenPos.y,
+                cursorScreenPos.x + ImGui.getWindowWidth(),
+                cursorScreenPos.y + lineHeight,
+                activeHeaderColor, lineHeight * 0.25f);
+
+            // - header text
             ImGui.spacing(); ImGui.sameLine();
             ImGui.text("Nodes");
+
+            // - node detail rows
             ImGui.indent();
             for (var node : editor.nodes) {
-                // start new node detail row
                 ImGui.pushID(node.pointerId);
                 var start = ImGui.getCursorScreenPos();
 
-                // node row: show just touched indicator that fades over time
+                // node detail row: show 'just touched' indicator indicator that fades over time
                 float progress = editor.getTouchProgress(node);
                 if (progress > 0) {
                     ImGui.getWindowDrawList().addLine(
@@ -76,7 +81,7 @@ public class InfoPane {
                         ImColor.rgba(1f, 0f, 0f, 1f - progress), 4f);
                 }
 
-                // node row: name and handle selection input, including multi-select
+                // node detail row: name and handle selection input, including multi-select
                 var isSelected = editor.isSelected(node);
                 if (ImGui.selectable(node.toLabel(), isSelected)) {
                     if (io.getKeyCtrl()) {
@@ -88,62 +93,69 @@ public class InfoPane {
                     } else {
                         editor.select(node);
                     }
+
+                    // focus on the selection in the editor
                     editor.navigateToSelection();
                 }
 
-                // node row: on hover - show node state in tooltip
+                // node detail row: on hover - show node state in tooltip
                 if (ImGui.isItemHovered() && node.hasState()) {
                     ImGui.setTooltip(STR."State: \{node.getState()}");
                 }
 
-                // node row: pointer id text
-                var style = ImGui.getStyle();
+                // node detail row: pointer id text
+                int numIcons = 2;
                 var iconSize = lineHeight;
-                var pointerId = STR."(\{node.pointerId})";
-                var textSize = ImGui.calcTextSize(pointerId);
-                iconPanelPos.set(
-                    start.x + width - style.getFramePaddingX() - style.getIndentSpacing() - iconSize - iconSize - style.getItemInnerSpacingX(),
-                    start.y + (lineHeight - iconSize) / 2f);
-                float posX = iconPanelPos.x - textSize.x - style.getItemInnerSpacingX();
-                drawList.addText(posX, start.y, Util.IM_COLOR_WHITE, pointerId);
+                var pointerIdText = STR."(\{node.pointerId})";
+                var textSize = ImGui.calcTextSize(pointerIdText);
+                var edgeIconBottom = (lineHeight - iconSize) / 2f;
+                var edgeIconLeft = ImGui.getWindowWidth()
+                    - style.getFramePaddingX()
+                    - style.getIndentSpacing()
+                    - style.getItemInnerSpacingX()
+                    - (numIcons * iconSize);
+                iconPanelPos.set(start.x + edgeIconLeft, start.y + edgeIconBottom);
 
-                // node row: icons
-                ImVec2 iconTextSize;
+                float edgeTextLeft = iconPanelPos.x - textSize.x - style.getItemInnerSpacingX();
+                drawList.addText(edgeTextLeft, start.y, Util.IM_COLOR_WHITE, pointerIdText);
+
+                // node detail row: icons
+                ImVec2 textIconSize;
                 ImGui.setCursorScreenPos(iconPanelPos);
                 // - save state icon and save handling
                 {
-                    var iconText = FontAwesomeIcons.Save;
-                    iconTextSize = ImGui.calcTextSize(iconText);
+                    var textIcon = FontAwesomeIcons.Save;
+                    textIconSize = ImGui.calcTextSize(textIcon);
 
                     ImGui.setItemAllowOverlap();
                     if (!node.hasSavedState()) {
                         // use an invisible button in order to show the icon differently depending on input state
-                        if (ImGui.invisibleButton("save", iconTextSize)) {
+                        if (ImGui.invisibleButton("save", textIconSize)) {
                             node.updateSavedState();
                         }
-                        // draw the actual icon, with color based on input state
+                        // draw the actual 'icon', with color based on input state
                         var iconTextColor = ImColor.rgba("#ffffff88");
                         if      (ImGui.isItemActive())  iconTextColor = ImColor.rgba("#ffff00ff");
                         else if (ImGui.isItemHovered()) iconTextColor = ImColor.rgba("#ffff0088");
-                        drawList.addText(iconPanelPos, iconTextColor, iconText);
+                        drawList.addText(iconPanelPos, iconTextColor, textIcon);
                     } else {
                         // use placeholder to reserve space for icon, because its not clickable without saved state
-                        ImGui.dummy(iconTextSize);
-                        // draw the faded icon
+                        ImGui.dummy(textIconSize);
+                        // draw the faded 'icon'
                         var iconTextColor = ImColor.rgba("#ffffff33");
-                        drawList.addText(iconPanelPos, iconTextColor, iconText);
+                        drawList.addText(iconPanelPos, iconTextColor, textIcon);
                     }
                 }
-                ImGui.sameLine(0, style.getItemInnerSpacingX());
                 // - restore state icon and restore handling
+                ImGui.sameLine(0, style.getItemInnerSpacingX());
                 {
                     var iconText = FontAwesomeIcons.Redo;
-                    iconTextSize = ImGui.calcTextSize(iconText);
+                    textIconSize = ImGui.calcTextSize(iconText);
 
                     ImGui.setItemAllowOverlap();
                     if (node.hasSavedState()) {
                         // use an invisible button in order to show the icon differently depending on input state
-                        if (ImGui.invisibleButton("restore", iconTextSize)) {
+                        if (ImGui.invisibleButton("restore", textIconSize)) {
                             node.restoreSavedState();
                             editor.restoreNodeState(node);
                             node.clearSavedState();
@@ -155,7 +167,7 @@ public class InfoPane {
                         drawList.addText(iconPanelPos, iconTextColor, iconText);
                     } else {
                         // use placeholder to reserve space for icon, because its not clickable without state to restore
-                        ImGui.dummy(iconTextSize);
+                        ImGui.dummy(textIconSize);
                         // draw the faded icon
                         var iconTextColor = ImColor.rgba("#ffffff33");
                         drawList.addText(iconPanelPos, iconTextColor, iconText);
@@ -164,20 +176,29 @@ public class InfoPane {
 
                 ImGui.sameLine();
                 ImGui.setItemAllowOverlap();
-                ImGui.dummy(0, iconTextSize.y);
+                ImGui.dummy(0, textIconSize.y);
 
                 ImGui.popID();
             }
             ImGui.unindent();
 
             // selection change details
+            lineHeight = ImGui.getTextLineHeight();
             cursorScreenPos = ImGui.getCursorScreenPos();
-            size = cursorScreenPos.plus(width, lineHeight);
-            drawList.addRectFilled(cursorScreenPos, size, activeHeaderColor, lineHeight * 0.25f);
+            drawList.addRectFilled(
+                cursorScreenPos.x, cursorScreenPos.y,
+                cursorScreenPos.x + ImGui.getWindowWidth(),
+                cursorScreenPos.y + lineHeight,
+                activeHeaderColor, lineHeight * 0.25f);
+
+            // - header text
             ImGui.spacing(); ImGui.sameLine();
             ImGui.text("Selection");
-            if (ImGui.begin("Selection Stats")) {//, size.set(width, 0))) {
-                float spacing = width / 2f;
+
+            // - selection change details
+            ImGui.indent();
+            {
+                float spacing = ImGui.getWindowWidth() / 2f;
 
                 var pluralSuffix = (selectionChangeCount == 1) ? "" : "s";
                 ImGui.text(STR."Changed \{selectionChangeCount} time\{pluralSuffix}");
@@ -187,9 +208,9 @@ public class InfoPane {
                     editor.clearSelection();
                 }
             }
-            ImGui.end();
+            ImGui.unindent();
 
-            // selected objects
+            // - selected objects
             ImGui.indent();
             {
                 editor.getSelectedNodes().forEach(node -> ImGui.text(node.toString()));
