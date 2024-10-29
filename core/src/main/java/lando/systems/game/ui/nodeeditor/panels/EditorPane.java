@@ -1,6 +1,5 @@
 package lando.systems.game.ui.nodeeditor.panels;
 
-import imgui.ImColor;
 import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.flag.ImGuiStyleVar;
@@ -8,18 +7,18 @@ import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
-import lando.systems.game.ui.nodeeditor.NodeBuilder;
+import lando.systems.game.ui.nodeeditor.NodeRenderer;
 import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 public class EditorPane {
 
     private final BlueprintEditor editor;
-    private final NodeBuilder builder;
+    private final NodeRenderer nodeRenderer;
 
     public EditorPane(BlueprintEditor blueprintEditor) {
         this.editor = blueprintEditor;
-        this.builder = new NodeBuilder(editor);
+        this.nodeRenderer = new NodeRenderer(editor);
         init();
     }
 
@@ -43,45 +42,28 @@ public class EditorPane {
             {
                 // render the nodes
                 for (var node : editor.nodes) {
-                    builder.begin(node);
+                    nodeRenderer.begin(node);
                     {
-                        builder.header(1f, 0f, 1f, 1f);
-                        ImGui.text(node.name);
-                        builder.endHeader();
-
-                        builder.content();
+                        nodeRenderer.header(() -> ImGui.text(node.name));
+                        nodeRenderer.content();
                         {
-                            builder.inputs();
-                            for (var pin : node.inputs) {
-                                builder.input(pin);
+                            nodeRenderer.inputPins(node.inputs, (pin) -> {
                                 ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-                                builder.endInput();
-                            }
-                            builder.endInputs();
+                            });
 
-                            builder.middle();
-                            ImGui.text("Node");
-                            ImGui.text("Content");
-                            ImGui.text("Middle");
-                            builder.endMiddle();
+                            nodeRenderer.middle(() -> {
+                                ImGui.text("Node");
+                                ImGui.text("Content");
+                                ImGui.text("Middle");
+                            });
 
-                            builder.outputs();
-                            for (var pin : node.outputs) {
-                                builder.output(pin);
+                            nodeRenderer.outputs(node.outputs, (pin) -> {
                                 ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-                                builder.endOutput();
-                            }
-                            builder.endOutputs();
+                            });
                         }
-                        builder.endContent();
+                        nodeRenderer.endContent();
                     }
-                    builder.end();
-
-                    builder.renderNodeBackgrounds(
-                        node.pointerId,
-                        ImColor.rgba("#23531cff"),
-                        ImColor.rgba("#282c27ff")
-                    );
+                    nodeRenderer.end();
                 }
 
                 // render the links
