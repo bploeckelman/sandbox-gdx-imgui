@@ -44,7 +44,7 @@ public class EditorPane {
                 for (var node : editor.nodes) {
                     nodeRenderer.begin(node);
                     {
-                        nodeRenderer.header(() -> ImGui.text(node.name));
+                        nodeRenderer.header(() -> ImGui.text(node.toString()));
                         nodeRenderer.content();
                         {
                             nodeRenderer.inputPins(node.inputs, (pin) -> {
@@ -57,7 +57,7 @@ public class EditorPane {
                                 ImGui.text("Middle");
                             });
 
-                            nodeRenderer.outputs(node.outputs, (pin) -> {
+                            nodeRenderer.outputPins(node.outputs, (pin) -> {
                                 ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
                             });
                         }
@@ -76,7 +76,7 @@ public class EditorPane {
                 if (NodeEditor.beginCreate()) {
                     var a = new ImLong();
                     var b = new ImLong();
-                    if (NodeEditor.queryNewLink(a, b) && NodeEditor.acceptNewItem()) {
+                    if (NodeEditor.queryNewLink(a, b)) {
                         // find the pin for each
                         var srcPin = editor.findPin(a.get()).orElse(null);
                         var dstPin = editor.findPin(b.get()).orElse(null);
@@ -201,38 +201,6 @@ public class EditorPane {
                         ImGui.endPopup();
                     }
                     ImGui.popStyleVar();
-
-
-//                    var nodeWithContextMenu = NodeEditor.getNodeWithContextMenu();
-//                    if (nodeWithContextMenu != -1) {
-//                        ImGui.openPopup("node_context");
-//                        ImGui.getStateStorage().setInt(ImGui.getID("delete_node_id"), (int) nodeWithContextMenu);
-//                    }
-//
-//                    if (ImGui.isPopupOpen("node_context")) {
-//                        var targetNode = ImGui.getStateStorage().getInt(ImGui.getID("delete_node_id"));
-//                        if (ImGui.beginPopup("node_context")) {
-//                            if (ImGui.button("Delete " + graph.nodes.get(targetNode).getName())) {
-//                                graph.nodes.remove(targetNode);
-//                                ImGui.closeCurrentPopup();
-//                            }
-//                            ImGui.endPopup();
-//                        }
-//                    }
-//
-//                    if (NodeEditor.showBackgroundContextMenu()) {
-//                        ImGui.openPopup("node_editor_context");
-//                    }
-//
-//                    if (ImGui.beginPopup("node_editor_context")) {
-//                        if (ImGui.button("Create New Node")) {
-//                            var node = graph.createGraphNode();
-//                            var canvas = NodeEditor.screenToCanvas(ImGui.getMousePos());
-//                            NodeEditor.setNodePosition(node.nodeId, canvas);
-//                            ImGui.closeCurrentPopup();
-//                        }
-//                        ImGui.endPopup();
-//                    }
                 }
                 NodeEditor.resume();
             }

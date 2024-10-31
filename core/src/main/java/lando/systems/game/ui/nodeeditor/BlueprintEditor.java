@@ -44,8 +44,8 @@ public class BlueprintEditor extends NodeCanvas {
 
     public final List<Node> nodes;
     public final List<Link> links;
-    public final Graph graph;
     public final ImBoolean showOrdinals;
+    public final ImBoolean showMetricsWindow;
 
     public NodeEditorContext context;
     public InfoPane infoPane;
@@ -59,14 +59,12 @@ public class BlueprintEditor extends NodeCanvas {
         super(imgui);
         this.nodeTouchTime = new TreeMap<>(LongComparators.NATURAL_COMPARATOR);
         this.showOrdinals = new ImBoolean();
+        this.showMetricsWindow = new ImBoolean();
         this.objectByPointerId = new HashMap<>();
         this.nodes = new ArrayList<>();
         this.links = new ArrayList<>();
         this.selectedNodes = new long[0];
         this.selectedLinks = new long[0];
-
-        // TODO(brian): remove me in lieu of direct management of nodes/links
-        this.graph = new Graph();
     }
 
     @Override
@@ -92,6 +90,7 @@ public class BlueprintEditor extends NodeCanvas {
         float dt = ImGui.getIO().getDeltaTime();
         updateTouch(dt);
         updateSelections();
+        infoPane.update();
     }
 
     @Override

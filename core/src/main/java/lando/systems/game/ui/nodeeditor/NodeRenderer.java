@@ -196,7 +196,7 @@ public class NodeRenderer {
         ImGui.sameLine();
     }
 
-    public void outputs(List<Pin> pins, Consumer<Pin> outputPinRenderer) {
+    public void outputPins(List<Pin> pins, Consumer<Pin> outputPinRenderer) {
         transitionTo(State.OUTPUTS);
 
         ImGui.beginGroup();

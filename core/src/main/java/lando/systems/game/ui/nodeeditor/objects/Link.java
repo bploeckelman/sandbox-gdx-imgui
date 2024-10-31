@@ -5,7 +5,7 @@ import static lando.systems.game.ui.nodeeditor.objects.Link.Default.*;
 public class Link extends NodeEditorObject {
 
     static class Default {
-        static final String PREFIX = "Link#";
+        static final String PREFIX = "Link_";
     }
 
     public final Pin source;
@@ -17,12 +17,16 @@ public class Link extends NodeEditorObject {
         this.target = targetPin;
     }
 
+    public String name() {
+        return STR."\{PREFIX}\{id}";
+    }
+
     @Override
     public String toString() {
-        return STR."\{PREFIX}\{id}[\{source} -> \{target}]";
+        return STR."\{name()}[\{source}->\{target}]";
     }
 
     public String toLabel() {
-        return STR."\{PREFIX}\{id}##\{pointerId}";
+        return STR."\{name()}##\{pointerId}";
     }
 }

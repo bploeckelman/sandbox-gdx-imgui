@@ -14,6 +14,7 @@ public class Util {
     private static final String PREFS_NAME = "sandbox-imgui-prefs";
 
     public static final int IM_COLOR_WHITE = ImColor.rgba(1f, 1f, 1f, 1f);
+    public static final int IM_COLOR_GRAY = ImColor.rgba(0.5f, 0.5f, 0.5f, 1f);
 
     public static Preferences prefs;
     public static Json json;

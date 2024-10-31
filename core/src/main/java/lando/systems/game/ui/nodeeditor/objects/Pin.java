@@ -8,7 +8,7 @@ import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.*;
 public class Pin extends NodeEditorObject{
 
     static class Default {
-        static final String NAME_PREFIX = "Pin#";
+        static final String NAME_PREFIX = "Pin_";
         static final int COLOR = ImColor.rgb("#cecece");
     }
 

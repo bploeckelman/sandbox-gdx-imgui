@@ -11,7 +11,7 @@ import static lando.systems.game.ui.nodeeditor.objects.Node.Default.*;
 public class Node extends NodeEditorObject {
 
     static class Default {
-        static final String NAME_PREFIX = "Node#";
+        static final String NAME_PREFIX = "Node_";
         static final ImVec2 SIZE = new ImVec2(300, 200);
         static final int COLOR = ImColor.rgba("#ffffffff");
     }
