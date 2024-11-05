@@ -1,11 +1,9 @@
 package lando.systems.game.ui.nodeeditor.panels;
 
-import com.github.tommyettinger.textra.Font;
 import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiHoveredFlags;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiWindowFlags;
@@ -13,7 +11,6 @@ import lando.systems.game.Util;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.ImGuiUtil;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
-import lando.systems.game.ui.nodeeditor.objects.Link;
 import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.Pin;
 

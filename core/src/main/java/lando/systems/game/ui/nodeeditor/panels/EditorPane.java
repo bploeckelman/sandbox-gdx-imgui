@@ -1,7 +1,11 @@
 package lando.systems.game.ui.nodeeditor.panels;
 
 import imgui.ImGui;
+import imgui.ImVec2;
+import imgui.ImVec4;
 import imgui.extension.nodeditor.NodeEditor;
+import imgui.extension.nodeditor.flag.NodeEditorStyleColor;
+import imgui.extension.nodeditor.flag.NodeEditorStyleVar;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImLong;
@@ -12,6 +16,18 @@ import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 public class EditorPane {
+
+    private static final ImVec4 NODE_BG_COLOR = new ImVec4(128, 128, 128, 200);
+    private static final ImVec4 NODE_BORDER_COLOR = new ImVec4( 32,  32,  32, 200);
+    private static final ImVec4 PIN_RECT_COLOR = new ImVec4( 60, 180, 255, 150);
+    private static final ImVec4 PIN_RECT_BORDER_COLOR = new ImVec4( 60, 180, 255, 150);
+    private static final ImVec4 NODE_PADDING = new ImVec4(4, 4, 4, 4);
+    private static final float NODE_ROUNDING = 5f;
+    private static final ImVec2 SOURCE_DIRECTION = new ImVec2(0.0f,  1.0f);
+    private static final ImVec2 TARGET_DIRECTION = new ImVec2(0.0f, -1.0f);
+    private static final float LINK_STRENGTH = 0.0f;
+    private static final float PIN_BORDER_WIDTH = 1.0f;
+    private static final float PIN_RADIUS = 5.0f;
 
     private final BlueprintEditor editor;
     private final NodeRenderer nodeRenderer;
@@ -40,6 +56,19 @@ public class EditorPane {
         if (ImGui.begin("Editor", editorWindowFlags)) {
             NodeEditor.begin("Node Editor");
             {
+                NodeEditor.pushStyleColor(NodeEditorStyleColor.NodeBg,        NODE_BG_COLOR);
+                NodeEditor.pushStyleColor(NodeEditorStyleColor.NodeBorder,    NODE_BORDER_COLOR);
+                NodeEditor.pushStyleColor(NodeEditorStyleColor.PinRect,       PIN_RECT_COLOR);
+                NodeEditor.pushStyleColor(NodeEditorStyleColor.PinRectBorder, PIN_RECT_BORDER_COLOR);
+
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodePadding,     NODE_PADDING);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodeRounding,    NODE_ROUNDING);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.SourceDirection, SOURCE_DIRECTION);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.TargetDirection, TARGET_DIRECTION);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.LinkStrength,    LINK_STRENGTH);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinBorderWidth,  PIN_BORDER_WIDTH);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinRadius,       PIN_RADIUS);
+
                 // render the nodes
                 for (var node : editor.nodes) {
                     nodeRenderer.begin(node);
@@ -203,6 +232,9 @@ public class EditorPane {
                     ImGui.popStyleVar();
                 }
                 NodeEditor.resume();
+
+                NodeEditor.popStyleVar(7);
+                NodeEditor.popStyleColor(4);
             }
             NodeEditor.end();
         }
