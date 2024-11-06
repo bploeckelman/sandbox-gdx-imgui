@@ -6,9 +6,12 @@ import imgui.ImVec4;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.flag.NodeEditorStyleColor;
 import imgui.extension.nodeditor.flag.NodeEditorStyleVar;
+import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImInt;
 import imgui.type.ImLong;
+import imgui.type.ImString;
 import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 import lando.systems.game.ui.nodeeditor.NodeRenderer;
@@ -40,7 +43,7 @@ public class EditorPane {
 
     public void init() {
         for (int i = 0; i < 3; i++) {
-            var node = new Node();
+            var node = new Node<>(ImString.class);
             editor.addNode(node);
             for (int j = 0; j < 2; j++) {
                 var iPin = new Pin(STR."\{i}-in-\{j}", node, Pin.IO.INPUT);
@@ -71,28 +74,29 @@ public class EditorPane {
 
                 // render the nodes
                 for (var node : editor.nodes) {
-                    nodeRenderer.begin(node);
-                    {
-                        nodeRenderer.header(() -> ImGui.text(node.toString()));
-                        nodeRenderer.content();
-                        {
-                            nodeRenderer.inputPins(node.inputs, (pin) -> {
-                                ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-                            });
-
-                            nodeRenderer.middle(() -> {
-                                ImGui.text("Node");
-                                ImGui.text("Content");
-                                ImGui.text("Middle");
-                            });
-
-                            nodeRenderer.outputPins(node.outputs, (pin) -> {
-                                ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-                            });
-                        }
-                        nodeRenderer.endContent();
-                    }
-                    nodeRenderer.end();
+                    node.render();
+//                    nodeRenderer.begin(node);
+//                    {
+//                        nodeRenderer.header(() -> ImGui.text(node.toString()));
+//                        nodeRenderer.content();
+//                        {
+//                            nodeRenderer.inputPins(node.inputs, (pin) -> {
+//                                ImGui.text(STR."\{FontAwesomeIcons.CircleNotch}\{pin.name} ");
+//                            });
+//
+//                            nodeRenderer.middle(() -> {
+//                                ImGui.text("Node");
+//                                ImGui.text("Content");
+//                                ImGui.text("Middle");
+//                            });
+//
+//                            nodeRenderer.outputPins(node.outputs, (pin) -> {
+//                                ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
+//                            });
+//                        }
+//                        nodeRenderer.endContent();
+//                    }
+//                    nodeRenderer.end();
                 }
 
                 // render the links
@@ -221,12 +225,20 @@ public class EditorPane {
                         }
                         ImGui.endPopup();
                     } else if (ImGui.beginPopup("create-node")) {
-                        if (ImGui.selectable("Create Node")) {
-                            // TODO(brian): flesh out the node creation menu substantially,
-                            //  different types of nodes, different numbers of pins, etc...
-                            var node = new Node();
+                        // TODO(brian): flesh out the node creation menu substantially,
+                        //  different types of nodes, different numbers of pins, etc...
+
+                        // TODO(brian): nodes should be created at the click position, not top-left
+
+                        if (ImGui.menuItem("Testing Node")) {
+                            var node = new Node<>(ImInt.class);
                             editor.addNode(node);
                         }
+                        if (ImGui.menuItem("Text Node")) {
+                            var node = new Node<>(ImString.class);
+                            editor.addNode(node);
+                        }
+
                         ImGui.endPopup();
                     }
                     ImGui.popStyleVar();

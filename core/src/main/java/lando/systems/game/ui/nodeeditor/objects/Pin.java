@@ -1,11 +1,13 @@
 package lando.systems.game.ui.nodeeditor.objects;
 
 import imgui.ImColor;
+import imgui.ImGui;
+import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 
 import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.*;
 
-public class Pin extends NodeEditorObject{
+public class Pin extends NodeEditorObject {
 
     static class Default {
         static final String NAME_PREFIX = "Pin_";
@@ -61,6 +63,18 @@ public class Pin extends NodeEditorObject{
             case INPUT -> node.inputs.add(this);
             case OUTPUT -> node.outputs.add(this);
         }
+    }
+
+    public void render() {
+        NodeEditor.beginPin(pointerId, io.pinKind());
+        ImGui.pushID(pointerId);
+        ImGui.beginGroup();
+
+        ImGui.text(name);
+
+        ImGui.endGroup();
+        ImGui.popID();
+        NodeEditor.endPin();
     }
 
     public Link connectTo(Pin target) {
