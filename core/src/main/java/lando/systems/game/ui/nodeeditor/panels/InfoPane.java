@@ -12,7 +12,6 @@ import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.ImGuiUtil;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 import lando.systems.game.ui.nodeeditor.objects.Node;
-import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 import java.util.stream.Collectors;
 
@@ -134,10 +133,10 @@ public class InfoPane {
                             Node: '\{node.name}'_\{node.id}#\{node.pointerId}
 
                             Inputs:
-                              \{node.inputs.stream().map(Pin::toString).collect(Collectors.joining("\r\n  "))}
+                              \{node.inputs.stream().map(Object::toString).collect(Collectors.joining("\\r\\n  "))}
 
                             Outputs:
-                              \{node.outputs.stream().map(Pin::toString).collect(Collectors.joining("\r\n  "))}
+                              \{node.outputs.stream().map(Object::toString).collect(Collectors.joining("\r\n  "))}
                             """);
                         }
                     });
