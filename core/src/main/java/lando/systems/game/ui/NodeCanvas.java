@@ -28,7 +28,7 @@ public abstract class NodeCanvas implements Disposable {
         var file = Util.openFileDialog();
         if (file != null) {
             try {
-                var fileContent = new String(Files.readAllBytes(file.toPath()).toString());
+                var fileContent = new String(Files.readAllBytes(file.toPath()));
                 Gdx.app.log("BlueprintEditor", "Loaded file: " + file.getPath());
                 Gdx.app.log("BlueprintEditor", "File content: " + fileContent);
             } catch (IOException e) {
