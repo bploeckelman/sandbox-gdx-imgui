@@ -1,5 +1,6 @@
 package lando.systems.game.ui.nodeeditor.panels;
 
+import com.badlogic.gdx.math.MathUtils;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.ImVec4;
@@ -17,15 +18,19 @@ import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 import lando.systems.game.ui.nodeeditor.NodeRenderer;
 import lando.systems.game.ui.nodeeditor.objects.Node;
 import lando.systems.game.ui.nodeeditor.objects.Pin;
+import lando.systems.game.ui.nodeeditor.objects.Text;
 
 public class EditorPane {
 
-    private static final ImVec4 NODE_BG_COLOR = new ImVec4(128, 128, 128, 200);
-    private static final ImVec4 NODE_BORDER_COLOR = new ImVec4( 32,  32,  32, 200);
-    private static final ImVec4 PIN_RECT_COLOR = new ImVec4( 60, 180, 255, 150);
-    private static final ImVec4 PIN_RECT_BORDER_COLOR = new ImVec4( 60, 180, 255, 150);
-    private static final ImVec4 NODE_PADDING = new ImVec4(4, 4, 4, 4);
+    private static final ImVec4 NODE_BG_COLOR = new ImVec4(1f, 1f, 1f, 0.0f);
+    private static final ImVec4 NODE_BORDER_COLOR = new ImVec4( 0.6f,  0.6f,  0.6f, 0.8f);
+    private static final ImVec4 PIN_RECT_COLOR = new ImVec4( 0.24f, 0.6f, 1f, 0.6f);
+    private static final ImVec4 PIN_RECT_BORDER_COLOR = new ImVec4( 0.24f, 0.6f, 1f, 0.6f);
+    private static final ImVec4 NODE_PADDING = new ImVec4(6, 6, 6, 6);
     private static final float NODE_ROUNDING = 5f;
+    private static final float NODE_BORDER_WIDTH = 1.5f;
+    private static final float NODE_BORDER_WIDTH_HOVERED = 2.5f;
+    private static final float NODE_BORDER_WIDTH_SELECTED = 3.5f;
     private static final ImVec2 SOURCE_DIRECTION = new ImVec2(0.0f,  1.0f);
     private static final ImVec2 TARGET_DIRECTION = new ImVec2(0.0f, -1.0f);
     private static final float LINK_STRENGTH = 0.0f;
@@ -43,7 +48,8 @@ public class EditorPane {
 
     public void init() {
         for (int i = 0; i < 3; i++) {
-            var node = new Node<>(ImString.class);
+            var clazz = MathUtils.randomBoolean() ? Text.class : ImString.class;
+            var node = new Node<>(clazz);
             editor.addNode(node);
             for (int j = 0; j < 2; j++) {
                 var iPin = new Pin(STR."\{i}-in-\{j}", node, Pin.IO.INPUT);
@@ -64,13 +70,16 @@ public class EditorPane {
                 NodeEditor.pushStyleColor(NodeEditorStyleColor.PinRect,       PIN_RECT_COLOR);
                 NodeEditor.pushStyleColor(NodeEditorStyleColor.PinRectBorder, PIN_RECT_BORDER_COLOR);
 
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodePadding,     NODE_PADDING);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodeRounding,    NODE_ROUNDING);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.SourceDirection, SOURCE_DIRECTION);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.TargetDirection, TARGET_DIRECTION);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.LinkStrength,    LINK_STRENGTH);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinBorderWidth,  PIN_BORDER_WIDTH);
-                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinRadius,       PIN_RADIUS);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodePadding,             NODE_PADDING);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodeRounding,            NODE_ROUNDING);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.NodeBorderWidth,         NODE_BORDER_WIDTH);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.HoveredNodeBorderWidth,  NODE_BORDER_WIDTH_HOVERED);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.SelectedNodeBorderWidth, NODE_BORDER_WIDTH_SELECTED);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.SourceDirection,         SOURCE_DIRECTION);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.TargetDirection,         TARGET_DIRECTION);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.LinkStrength,            LINK_STRENGTH);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinBorderWidth,          PIN_BORDER_WIDTH);
+                NodeEditor.pushStyleVar(NodeEditorStyleVar.PinRadius,               PIN_RADIUS);
 
                 // render the nodes
                 for (var node : editor.nodes) {

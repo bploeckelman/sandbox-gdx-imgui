@@ -4,6 +4,7 @@ import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.extension.nodeditor.NodeEditor;
+import imgui.flag.ImDrawFlags;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
@@ -12,6 +13,10 @@ import java.util.List;
 import static lando.systems.game.ui.nodeeditor.objects.Node.Default.*;
 
 public class Node<T> extends NodeEditorObject {
+
+    private static final int headerBgColor = ImColor.rgba("#23531cff");
+    private static final int separatorColor = ImColor.rgb("#8ea687");
+    private static final int contentBgColor = ImColor.rgba("#282c27ff");
 
     static class Default {
         static final String NAME_PREFIX = "Node_";
@@ -37,10 +42,11 @@ public class Node<T> extends NodeEditorObject {
         SectionBounds header,
         SectionBounds content,
         SectionBounds inputs,
+        SectionBounds middle,
         SectionBounds outputs
     ) {
         public Bounds() {
-            this(new SectionBounds(), new SectionBounds(), new SectionBounds(), new SectionBounds(), new SectionBounds());
+            this(new SectionBounds(), new SectionBounds(), new SectionBounds(), new SectionBounds(), new SectionBounds(), new SectionBounds());
         }
     }
 
@@ -69,6 +75,14 @@ public class Node<T> extends NodeEditorObject {
         if (this.name.equals(NAME_PREFIX)) {
             this.name += id;
         }
+
+        // TEMP: the reflection approach for NodeData might be more hassle than its worth,
+        // for now just set some values for testing
+        if (data.value instanceof ImString str) {
+            str.set("This is a long multiline input field for testing purposes. It should wrap and scroll horizontally as needed.");
+        } else if (data.value instanceof Text txt) {
+            txt.set("Hello, nodes!");
+        }
     }
 
     public void render() {
@@ -78,36 +92,52 @@ public class Node<T> extends NodeEditorObject {
 
         // header -----------------------------------------
         ImGui.beginGroup();
-        ImGui.text(name);
-        ImGui.separator();
+        ImGui.text(toString());
+        ImGui.spacing();
+        ImGui.spacing();
         ImGui.endGroup();
         bounds.header.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
 
-        // inputs -----------------------------------------
-        ImGui.beginGroup();
-        inputs.forEach(Pin::render);
-        ImGui.endGroup();
-        bounds.inputs.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
-
         // content ----------------------------------------
         ImGui.beginGroup();
-        if (data != null) {
-            data.render();
+        {
+            ImGui.spacing();
+            ImGui.spacing();
+
+            // inputs
+            ImGui.beginGroup();
+            inputs.forEach(Pin::render);
+            ImGui.endGroup();
+            bounds.inputs.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
+
+            ImGui.sameLine();
+
+            // middle
+            ImGui.beginGroup();
+            if (data != null) {
+                data.render();
+            }
+            ImGui.endGroup();
+            bounds.middle.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
+
+            ImGui.sameLine();
+
+            // outputs
+            ImGui.beginGroup();
+            outputs.forEach(Pin::render);
+            ImGui.endGroup();
+            bounds.outputs.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
         }
         ImGui.endGroup();
         bounds.content.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
 
-        // outputs ----------------------------------------
-        ImGui.beginGroup();
-        outputs.forEach(Pin::render);
-        ImGui.endGroup();
-        bounds.outputs.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
 
         ImGui.endGroup();
         ImGui.popID();
         NodeEditor.endNode();
-
         bounds.node.set(ImGui.getItemRectMin(), ImGui.getItemRectMax());
+
+        renderBackgrounds();
     }
 
     public boolean hasState() {
@@ -153,5 +183,46 @@ public class Node<T> extends NodeEditorObject {
      */
     public String toLabel() {
         return STR."\{name}##\{pointerId}";
+    }
+
+    /**
+     * NOTE: only call after `NodeEditor.endNode()` because `NodeEditor.getNodeBackgroundDrawList()` requires that the node be fully specified
+     * This is also fiddly, and needs more work
+     */
+    private void renderBackgrounds() {
+        var draw = NodeEditor.getNodeBackgroundDrawList(pointerId);
+        var style = NodeEditor.getStyle();
+        var padding = style.getNodePadding();
+        var rounding = style.getNodeRounding() - 1f;
+        var borderWidth = style.getNodeBorderWidth();
+        var borderWidthHover = style.getHoveredNodeBorderWidth();
+        var borderWidthSelect = style.getSelectedNodeBorderWidth();
+        var isHovered = NodeEditor.getHoveredNode() == pointerId;
+        var isSelected = NodeEditor.isNodeSelected(pointerId);
+        var border = borderWidth;
+
+        // header background - with adjustments to fit the full node width
+        // NOTE: min/max are top-left/bottom-right corners in screen space
+        float headerMinX = bounds.node.min.x + border;
+        float headerMaxX = bounds.node.max.x - border;
+        float headerMinY = bounds.node.min.y + border;
+        float headerMaxY = headerMinY + (bounds.header.max.y - bounds.header.min.y);
+
+        draw.addRectFilled(
+            headerMinX, headerMinY, headerMaxX, headerMaxY,
+            headerBgColor, rounding, ImDrawFlags.RoundCornersTop);
+
+        // content background
+        draw.addRectFilled(
+            bounds.node.min.x + border, headerMaxY,
+            bounds.node.max.x - border,
+            bounds.node.max.y - border,
+            contentBgColor, rounding, ImDrawFlags.RoundCornersBottom);
+
+        // header/content separator - draw after backgrounds so it overlaps
+        draw.addLine(
+            bounds.node.min.x + border, headerMaxY,
+            bounds.node.max.x - border, headerMaxY,
+            separatorColor, 1);
     }
 }

@@ -30,9 +30,10 @@ public class NodeData<T> {
     public void render() {
         switch (value) {
             case ImString text -> {
-                ImGui.inputTextMultiline(STR."\{node.pointerId}##text", text,
-                    200, 100, ImGuiInputTextFlags.AllowTabInput);
+                ImGui.inputTextMultiline(
+                    STR."\{node.pointerId}##text", text, 200, 100, ImGuiInputTextFlags.AllowTabInput);
             }
+            case Text text -> ImGui.text(text.value);
             default -> ImGui.text(STR."Unsupported data type: \{value.getClass().getSimpleName()}");
         }
     }
