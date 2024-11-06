@@ -1,7 +1,13 @@
 package lando.systems.game.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
+import lando.systems.game.Util;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public abstract class NodeCanvas implements Disposable {
 
@@ -19,7 +25,18 @@ public abstract class NodeCanvas implements Disposable {
     public abstract void render();
 
     public void load() {
-        Gdx.app.error(NodeCanvas.class.getSimpleName(), "load() not implemented");
+        var file = Util.openFileDialog();
+        if (file != null) {
+            try {
+                var fileContent = new String(Files.readAllBytes(file.toPath()).toString());
+                Gdx.app.log("BlueprintEditor", "Loaded file: " + file.getPath());
+                Gdx.app.log("BlueprintEditor", "File content: " + fileContent);
+            } catch (IOException e) {
+                Gdx.app.error("BlueprintEditor", "Failed to read file", e);
+            }
+        } else {
+            Gdx.app.log("BlueprintEditor", "No file selected");
+        }
     }
 
     public void save() {

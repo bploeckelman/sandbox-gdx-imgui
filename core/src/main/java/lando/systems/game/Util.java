@@ -8,6 +8,10 @@ import com.badlogic.gdx.utils.SerializationException;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import imgui.ImColor;
 
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+
 public class Util {
 
     private static final String TAG = Util.class.getSimpleName();
@@ -82,5 +86,16 @@ public class Util {
                 Gdx.app.error(TAG, STR."Failed to open URL '\{url}': \{ex.getMessage()}");
             }
         }
+    }
+
+    public static File openFileDialog() {
+        var fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Select a file");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("JSON Files", "json"));
+        var result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        }
+        return null;
     }
 }
