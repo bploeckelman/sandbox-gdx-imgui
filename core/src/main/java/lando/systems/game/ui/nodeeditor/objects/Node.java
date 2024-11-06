@@ -220,9 +220,10 @@ public class Node<T> extends NodeEditorObject {
             contentBgColor, rounding, ImDrawFlags.RoundCornersBottom);
 
         // header/content separator - draw after backgrounds so it overlaps
+        // must be some sampling thing going on here that we have to adjust by 0.5f
         draw.addLine(
-            bounds.node.min.x + border, headerMaxY,
-            bounds.node.max.x - border, headerMaxY,
+            headerMinX - 0.5f, headerMaxY,
+            headerMaxX - 0.5f, headerMaxY,
             separatorColor, 1);
     }
 }
