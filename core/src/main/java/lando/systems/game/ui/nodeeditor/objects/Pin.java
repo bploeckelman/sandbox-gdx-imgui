@@ -5,7 +5,8 @@ import imgui.ImGui;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.extension.nodeditor.flag.NodeEditorPinKind;
 
-import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.*;
+import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.COLOR;
+import static lando.systems.game.ui.nodeeditor.objects.Pin.Default.NAME_PREFIX;
 
 public class Pin extends NodeEditorObject {
 

@@ -12,7 +12,6 @@ import lando.systems.game.shared.FontAwesomeIcons;
 import lando.systems.game.ui.ImGuiUtil;
 import lando.systems.game.ui.nodeeditor.BlueprintEditor;
 import lando.systems.game.ui.nodeeditor.objects.Node;
-import lando.systems.game.ui.nodeeditor.objects.Pin;
 
 import java.util.stream.Collectors;
 

@@ -102,7 +102,6 @@ public class Node<T> extends NodeEditorObject {
         ImGui.beginGroup();
         {
             ImGui.spacing();
-            ImGui.spacing();
 
             // inputs
             ImGui.beginGroup();
