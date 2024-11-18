@@ -34,13 +34,24 @@ public class EditorPane {
     private static final float LINK_STRENGTH = 0.0f;
     private static final float PIN_BORDER_WIDTH = 1.0f;
     private static final float PIN_RADIUS = 5.0f;
+    private static final String POPUP_TITLE_NODE_NEW = "Create New Node";
+    private static final String POPUP_TITLE_NODE = "Node Context Menu";
+    private static final String POPUP_TITLE_PIN = "Pin Context Menu";
+    private static final String POPUP_TITLE_LINK = "Link Context Menu";
 
     private final BlueprintEditor editor;
-    private final NodeRenderer nodeRenderer;
+
+    private static class ContextMenu {
+        ImLong nodePointerId = new ImLong();
+        ImLong pinPointerId = new ImLong();
+        ImLong linkPointerId = new ImLong();
+        Pin newNodeLinkPin;
+        Pin newLinkPin;
+    }
+    private final ContextMenu contextMenu = new ContextMenu();
 
     public EditorPane(BlueprintEditor blueprintEditor) {
         this.editor = blueprintEditor;
-        this.nodeRenderer = new NodeRenderer(editor);
         init();
     }
 
@@ -82,28 +93,6 @@ public class EditorPane {
                 // render the nodes
                 for (var node : editor.nodes) {
                     node.render();
-//                    nodeRenderer.begin(node);
-//                    {
-//                        nodeRenderer.header(() -> ImGui.text(node.toString()));
-//                        nodeRenderer.content();
-//                        {
-//                            nodeRenderer.inputPins(node.inputs, (pin) -> {
-//                                ImGui.text(STR."\{FontAwesomeIcons.CircleNotch}\{pin.name} ");
-//                            });
-//
-//                            nodeRenderer.middle(() -> {
-//                                ImGui.text("Node");
-//                                ImGui.text("Content");
-//                                ImGui.text("Middle");
-//                            });
-//
-//                            nodeRenderer.outputPins(node.outputs, (pin) -> {
-//                                ImGui.text(STR."\{FontAwesomeIcons.MapPin}\{pin.name} ");
-//                            });
-//                        }
-//                        nodeRenderer.endContent();
-//                    }
-//                    nodeRenderer.end();
                 }
 
                 // render the links
@@ -166,72 +155,91 @@ public class EditorPane {
                 // handle the context menu separate from rendering
                 NodeEditor.suspend();
                 {
-                    var nodePointerId = new ImLong();
-                    var pinPointerId = new ImLong();
-                    var linkPointerId = new ImLong();
+                    var openPopupPosition = ImGui.getMousePos();
 
-                    if (NodeEditor.showNodeContextMenu(nodePointerId)) {
-                        ImGui.openPopup("node-context");
-                    } else if (NodeEditor.showPinContextMenu(pinPointerId)) {
-                        ImGui.openPopup("pin-context");
-                    } else if (NodeEditor.showLinkContextMenu(linkPointerId)) {
-                        ImGui.openPopup("link-context");
+                    if (NodeEditor.showNodeContextMenu(contextMenu.nodePointerId)) {
+                        ImGui.openPopup(POPUP_TITLE_NODE);
+                    } else if (NodeEditor.showPinContextMenu(contextMenu.pinPointerId)) {
+                        ImGui.openPopup(POPUP_TITLE_PIN);
+                    } else if (NodeEditor.showLinkContextMenu(contextMenu.linkPointerId)) {
+                        ImGui.openPopup(POPUP_TITLE_LINK);
                     } else if (NodeEditor.showBackgroundContextMenu()) {
-                        ImGui.openPopup("create-node");
+                        ImGui.openPopup(POPUP_TITLE_NODE_NEW);
+                        contextMenu.newNodeLinkPin = null;
                     }
 
                     ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 8f);
-                    if (ImGui.beginPopup("node-context")) {
-                        var node = editor.findNode(nodePointerId.get()).orElse(null);
 
+                    if (ImGui.beginPopup(POPUP_TITLE_NODE)) {
                         ImGui.text("Node Context Menu");
                         ImGui.separator();
-                        if (node != null) {
-                            ImGui.text(STR."Node: \{node.name}");
-                            ImGui.text(STR."Inputs: \{node.inputs.size()}");
-                            ImGui.text(STR."Outputs: \{node.outputs.size()}");
-                            ImGui.separator();
-                            if (ImGui.menuItem("Delete")) {
-                                editor.removeNode(node);
-                            }
-                        } else {
-                            ImGui.text("Unknown node");
-                        }
-                        ImGui.endPopup();
-                    } else if (ImGui.beginPopup("pin-context")) {
-                        var pin = editor.findPin(pinPointerId.get()).orElse(null);
 
+                        var nodePointerId = contextMenu.nodePointerId.get();
+                        editor.findNode(nodePointerId)
+                            .ifPresentOrElse(node -> {
+                                ImGui.text(STR."ID: \{node.pointerId}");
+                                ImGui.text(STR."Node: \{node.name}");
+                                ImGui.text(STR."Inputs: \{node.inputs.size()}");
+                                ImGui.text(STR."Outputs: \{node.outputs.size()}");
+                                ImGui.separator();
+
+                                if (ImGui.menuItem("Delete")) {
+                                    editor.removeNode(node);
+                                }
+                            }, () -> ImGui.text(STR."Unknown node: \{nodePointerId}"));
+
+                        ImGui.endPopup();
+                    }
+
+                    if (ImGui.beginPopup(POPUP_TITLE_PIN)) {
                         ImGui.text("Pin Context Menu");
                         ImGui.separator();
-                        if (pin != null) {
-                            ImGui.text(STR."Pin: \{pin.name}");
-                            ImGui.text(STR."Node: \{pin.node.name}");
-                            ImGui.separator();
-                            if (ImGui.menuItem("Delete")) {
-                                editor.removePin(pin);
-                            }
-                        } else {
-                            ImGui.text("Unknown pin");
-                        }
-                        ImGui.endPopup();
-                    } else if (ImGui.beginPopup("link-context")) {
-                        var link = editor.findLink(linkPointerId.get()).orElse(null);
 
+                        var pinPointerId = contextMenu.pinPointerId.get();
+                        editor.findPin(pinPointerId)
+                                .ifPresentOrElse(pin -> {
+                                    ImGui.text(STR."ID: \{pin.pointerId}");
+                                    ImGui.text(STR."Pin: \{pin.name}");
+                                    ImGui.text(STR."Node: \{pin.node.name}");
+                                    ImGui.separator();
+
+                                    if (ImGui.menuItem("Delete")) {
+                                        editor.removePin(pin);
+                                    }
+                                }, () -> ImGui.text(STR."Unknown pin: \{pinPointerId}"));
+
+                        ImGui.endPopup();
+                    }
+
+                    if (ImGui.beginPopup(POPUP_TITLE_LINK)) {
                         ImGui.text("Link Context Menu");
                         ImGui.separator();
-                        if (link != null) {
-                            ImGui.text(STR."Link: \{link.pointerId}");
-                            ImGui.text(STR."Source: \{link.source.pointerId}");
-                            ImGui.text(STR."Target: \{link.target.pointerId}");
-                            ImGui.separator();
-                            if (ImGui.menuItem("Delete")) {
-                                editor.removeLink(link);
-                            }
-                        } else {
-                            ImGui.text("Unknown link");
-                        }
+
+                        var linkPointerId = contextMenu.linkPointerId.get();
+                        editor.findLink(linkPointerId)
+                                .ifPresentOrElse(link -> {
+                                    ImGui.text(STR."ID: \{link.pointerId}");
+                                    ImGui.text(STR."Source: \{link.source.name}");
+                                    ImGui.text(STR."Target: \{link.target.name}");
+                                    ImGui.separator();
+
+                                    if (ImGui.menuItem("Delete")) {
+                                        editor.removeLink(link);
+                                    }
+                                }, () -> ImGui.text(STR."Unknown link: \{linkPointerId}"));
+
                         ImGui.endPopup();
-                    } else if (ImGui.beginPopup("create-node")) {
+                    }
+
+                    if (ImGui.beginPopup(POPUP_TITLE_NODE_NEW)) {
+                        var newNodePosition = openPopupPosition;
+
+                        ImGui.text(POPUP_TITLE_NODE_NEW);
+                        ImGui.separator();
+
+                        // TODO(brian): enumerate types of nodes to create
+
+
                         // TODO(brian): flesh out the node creation menu substantially,
                         //  different types of nodes, different numbers of pins, etc...
 
@@ -248,6 +256,7 @@ public class EditorPane {
 
                         ImGui.endPopup();
                     }
+
                     ImGui.popStyleVar();
                 }
                 NodeEditor.resume();

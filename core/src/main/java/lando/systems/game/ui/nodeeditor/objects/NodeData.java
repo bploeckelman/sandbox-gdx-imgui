@@ -2,7 +2,6 @@ package lando.systems.game.ui.nodeeditor.objects;
 
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import imgui.ImGui;
-import imgui.flag.ImGuiInputTextFlags;
 import imgui.type.ImString;
 
 public class NodeData<T> {
@@ -30,8 +29,8 @@ public class NodeData<T> {
     public void render() {
         switch (value) {
             case ImString text -> {
-                ImGui.inputTextMultiline(
-                    STR."\{node.pointerId}##text", text, 200, 100, ImGuiInputTextFlags.AllowTabInput);
+                ImGui.inputText(STR."\{node.pointerId}##text", text);
+//                    STR."\{node.pointerId}##text", text, 200, 100, ImGuiInputTextFlags.AllowTabInput);
             }
             case Text text -> ImGui.text(text.value);
             default -> ImGui.text(STR."Unsupported data type: \{value.getClass().getSimpleName()}");
