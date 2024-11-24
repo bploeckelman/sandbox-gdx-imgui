@@ -1,5 +1,7 @@
 package lando.systems.game.ui.nodeeditor.objects;
 
+import imgui.extension.nodeditor.NodeEditor;
+
 import static lando.systems.game.ui.nodeeditor.objects.Link.Default.*;
 
 public class Link extends NodeEditorObject {
@@ -15,6 +17,10 @@ public class Link extends NodeEditorObject {
         super(nextLinkId());
         this.source = sourcePin;
         this.target = targetPin;
+    }
+
+    public void render() {
+        NodeEditor.link(pointerId, source.pointerId, target.pointerId);
     }
 
     public String name() {
