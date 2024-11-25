@@ -16,6 +16,7 @@ public class Pin extends NodeEditorObject {
     }
 
     public enum Type { FLOW, BOOL, INT, FLOAT, STR, OBJ, FUNC }
+    // TODO: rename to 'Kind' or use NodeEditorPinKind directly
     public enum IO { INPUT, OUTPUT;
 
         public int pinKind() {

@@ -1,7 +1,5 @@
 package lando.systems.game.ui.nodeeditor;
 
-import com.badlogic.gdx.Gdx;
-import com.github.tommyettinger.ds.support.sort.LongComparators;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.extension.nodeditor.NodeEditor;
@@ -10,25 +8,12 @@ import imgui.extension.nodeditor.NodeEditorContext;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
-import lando.systems.game.ui.Graph;
 import lando.systems.game.ui.ImGuiCore;
 import lando.systems.game.ui.NodeCanvas;
-import lando.systems.game.ui.nodeeditor.objects.Link;
-import lando.systems.game.ui.nodeeditor.objects.Node;
-import lando.systems.game.ui.nodeeditor.objects.NodeEditorObject;
-import lando.systems.game.ui.nodeeditor.objects.Pin;
+import lando.systems.game.ui.nodeeditor.objects.Link2;
+import lando.systems.game.ui.nodeeditor.objects.Node2;
 import lando.systems.game.ui.nodeeditor.panels.EditorPane;
 import lando.systems.game.ui.nodeeditor.panels.InfoPane;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 public class BlueprintEditor extends NodeCanvas {
 
@@ -38,33 +23,19 @@ public class BlueprintEditor extends NodeCanvas {
     public static final String URL = "https://github.com/thedmd/imgui-node-editor/tree/master/examples";
     public static final String REPO = "thedmd/imgui-node-editor";
 
-    private final float touchTime = 1f;
-    private final Map<Long, Float> nodeTouchTime ;
-    private final Map<Long, NodeEditorObject> objectByPointerId;
-
-    public final List<Node> nodes;
-    public final List<Link> links;
     public final ImBoolean showOrdinals;
     public final ImBoolean showMetricsWindow;
 
-    public NodeEditorContext context;
     public InfoPane infoPane;
     public EditorPane editorPane;
-    public long[] selectedNodes;
-    public long[] selectedLinks;
-    public int numSelectedNodes;
-    public int numSelectedLinks;
+    public EditorSession session;
+    public NodeEditorContext context;
 
     public BlueprintEditor(ImGuiCore imgui) {
         super(imgui);
-        this.nodeTouchTime = new TreeMap<>(LongComparators.NATURAL_COMPARATOR);
         this.showOrdinals = new ImBoolean();
         this.showMetricsWindow = new ImBoolean();
-        this.objectByPointerId = new HashMap<>();
-        this.nodes = new ArrayList<>();
-        this.links = new ArrayList<>();
-        this.selectedNodes = new long[0];
-        this.selectedLinks = new long[0];
+        this.session = new EditorSession();
     }
 
     @Override
@@ -88,8 +59,8 @@ public class BlueprintEditor extends NodeCanvas {
     @Override
     public void update() {
         float dt = ImGui.getIO().getDeltaTime();
-        updateTouch(dt);
-        updateSelections();
+        session.updateTouch(dt);
+        session.updateSelections();
         infoPane.update();
     }
 
@@ -125,185 +96,19 @@ public class BlueprintEditor extends NodeCanvas {
         ImGui.popStyleVar(2);
     }
 
-    // ------------------------------------------------------------------------
-    // Utilities used by externally defined widgets
-    // ------------------------------------------------------------------------
-
-    public Optional<Node> findNode(long pointerId) {
-        var object = objectByPointerId.get(pointerId);
-        return Optional.ofNullable(object)
-            .filter(Node.class::isInstance)
-            .map(Node.class::cast);
-    }
-
-    public Optional<Link> findLink(long pointerId) {
-        var object = objectByPointerId.get(pointerId);
-        return Optional.ofNullable(object)
-            .filter(Link.class::isInstance)
-            .map(Link.class::cast);
-    }
-
-    public Optional<Pin> findPin(long pointerId) {
-        var object = objectByPointerId.get(pointerId);
-        return Optional.ofNullable(object)
-            .filter(Pin.class::isInstance)
-            .map(Pin.class::cast);
-    }
-
-    public Stream<Node> getSelectedNodes() {
-        return LongStream.of(selectedNodes)
-            .mapToObj(objectByPointerId::get)
-            .filter(Node.class::isInstance)
-            .map(Node.class::cast);
-    }
-
-    public Stream<Link> getSelectedLinks() {
-        return LongStream.of(selectedLinks)
-            .mapToObj(objectByPointerId::get)
-            .filter(Link.class::isInstance)
-            .map(Link.class::cast);
-    }
-
     public void zoomToContent() {
         NodeEditor.navigateToContent(1);
     }
 
-    public void flow(Link link) {
+    public void flow(Link2 link) {
         // TODO(brian):
-    }
-
-    public void updateSelections() {
-        // selected objects are tracked together in native code,
-        // so the selected id arrays are always the same length
-        // and can be bigger than the actual counts for either type
-        int totalCount = NodeEditor.getSelectedObjectCount();
-        selectedNodes = new long[totalCount];
-        selectedLinks = new long[totalCount];
-
-        // populate the arrays with the selected object ids and get the counts by type
-        numSelectedNodes = NodeEditor.getSelectedNodes(selectedNodes, totalCount);
-        numSelectedLinks = NodeEditor.getSelectedLinks(selectedLinks, totalCount);
-
-        // (optional) trim the arrays to the actual counts
-        // this is not strictly necessary, but can be useful
-        // so we don't need to remember to iterate using `numSelectedX` counts
-        // instead of `selected[Nodes|Links].length` like one would expect
-        if (numSelectedNodes < totalCount) {
-            selectedNodes = Arrays.copyOf(selectedNodes, numSelectedNodes);
-        }
-        if (numSelectedLinks < totalCount) {
-            selectedLinks = Arrays.copyOf(selectedLinks, numSelectedLinks);
-        }
-    }
-
-    public boolean isSelected(Node node) {
-        for (int i = 0 ; i < numSelectedNodes ; i++) {
-            if (selectedNodes[i] == node.pointerId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isSelected(Link link) {
-        for (int i = 0 ; i < numSelectedLinks ; i++) {
-            if (selectedLinks[i] == link.pointerId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void select(Node node) {
-        select(node, false);
-    }
-
-    public void select(Node node, boolean append) {
-        NodeEditor.selectNode(node.pointerId, append);
-    }
-
-    public void deselect(Node node) {
-        NodeEditor.deselectNode(node.pointerId);
     }
 
     public void navigateToSelection() {
         NodeEditor.navigateToSelection();
     }
 
-    public void restoreNodeState(Node node) {
-        NodeEditor.restoreNodeState(node.pointerId);
-    }
-
-    public boolean hasSelectionChanged() {
-        return NodeEditor.hasSelectionChanged();
-    }
-
-    public void clearSelection() {
-        NodeEditor.clearSelection();
-    }
-
-    // ------------------------------------------------------------------------
-    // Node touch handling
-    // ------------------------------------------------------------------------
-
-    public void touchNode(Node node) {
-        nodeTouchTime.put(node.pointerId, touchTime);
-    }
-
-    /**
-     * Convert touch time for the specified node to a percent: 0..1
-     */
-    public float getTouchProgress(Node node) {
-        float time = nodeTouchTime.getOrDefault(node.pointerId, 0f);
-        if (time > 0f) {
-            return (touchTime - time) / touchTime;
-        }
-        return time;
-    }
-
-    public void updateTouch(float dt) {
-        // java's map interface doesn't allow direct modification
-        // of values while iterating, so we'll do it this way...
-        nodeTouchTime.replaceAll((id, time) -> (time > 0f) ? (time - dt) : time);
-    }
-
-    public void addNode(Node node) {
-        var _existingNode = findNode(node.pointerId);
-        if (_existingNode.isPresent()) {
-            var existingNode = _existingNode.get();
-            Gdx.app.log(TAG, STR."Failed to add, node already exists: \{existingNode}");
-            return;
-        }
-
-        nodes.add(node);
-        objectByPointerId.put(node.pointerId, node);
-    }
-
-    public void addPin(Pin pin) {
-        objectByPointerId.put(pin.pointerId, pin);
-    }
-
-    public void addLink(Link link) {
-        links.add(link);
-        objectByPointerId.put(link.pointerId, link);
-    }
-
-    public void removeNode(Node node) {
-        nodes.remove(node);
-        objectByPointerId.remove(node.pointerId);
-    }
-
-    public void removePin(Pin pin) {
-        objectByPointerId.remove(pin.pointerId);
-    }
-
-    public void removeLink(Link link) {
-        links.remove(link);
-        objectByPointerId.remove(link.pointerId);
-    }
-
-    public boolean canConnect(Pin srcPin, Pin dstPin) {
-        // TODO(brian): add constraints; single/multi connection, type matching, etc...
-        return (srcPin.node.id != dstPin.node.id);
+    public void restoreNodeState(Node2 node) {
+        NodeEditor.restoreNodeState(node.globalId);
     }
 }
