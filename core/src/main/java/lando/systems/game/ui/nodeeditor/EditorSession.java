@@ -6,7 +6,6 @@ import imgui.extension.nodeditor.NodeEditor;
 import lando.systems.game.ui.nodeeditor.objects.EditorObject;
 import lando.systems.game.ui.nodeeditor.objects.Link2;
 import lando.systems.game.ui.nodeeditor.objects.Node2;
-import lando.systems.game.ui.nodeeditor.objects.Pin;
 import lando.systems.game.ui.nodeeditor.objects.Pin2;
 
 import java.util.ArrayList;
@@ -52,6 +51,9 @@ public class EditorSession {
 
         nodes.add(node);
         objectByGlobalId.put(node.globalId, node);
+
+        node.inputs.forEach(this::addPin);
+        node.outputs.forEach(this::addPin);
     }
 
     public void addPin(Pin2 pin) {
@@ -64,6 +66,9 @@ public class EditorSession {
     }
 
     public void removeNode(Node2 node) {
+        node.inputs.forEach(this::removePin);
+        node.outputs.forEach(this::removePin);
+
         nodes.remove(node);
         objectByGlobalId.remove(node.globalId);
     }
@@ -75,11 +80,6 @@ public class EditorSession {
     public void removeLink(Link2 link) {
         links.remove(link);
         objectByGlobalId.remove(link.globalId);
-    }
-
-    public boolean canConnect(Pin2 srcPin, Pin2 dstPin) {
-        // TODO(brian): add constraints; single/multi connection, type matching, etc...
-        return (srcPin.node.globalId != dstPin.node.globalId);
     }
 
     // Query methods ----------------------------------------------------------

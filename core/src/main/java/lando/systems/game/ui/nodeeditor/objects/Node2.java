@@ -2,9 +2,13 @@ package lando.systems.game.ui.nodeeditor.objects;
 
 import imgui.ImColor;
 import imgui.ImGui;
+import imgui.ImGuiInputTextCallbackData;
 import imgui.ImVec2;
+import imgui.callback.ImGuiInputTextCallback;
 import imgui.extension.nodeditor.NodeEditor;
 import imgui.flag.ImDrawFlags;
+import imgui.flag.ImGuiInputTextFlags;
+import imgui.type.ImString;
 import lando.systems.game.ui.nodeeditor.NodeDesc;
 
 import java.util.ArrayList;
@@ -64,7 +68,7 @@ public class Node2 extends EditorObject {
 
         // header -----------------------------------------
         ImGui.beginGroup();
-        ImGui.text(toString());
+        ImGui.text(label);
         ImGui.spacing();
         ImGui.spacing();
         ImGui.endGroup();
@@ -85,7 +89,33 @@ public class Node2 extends EditorObject {
 
             // middle
             ImGui.beginGroup();
-            // TODO: props, in the plano examples NodeDesc has a 'drawAndEdit' callback that would be called here
+            for (var prop : props.strings.entrySet()) {
+                var key = prop.getKey();
+                switch (key) {
+                    case "Text" -> {
+                        var inputKey = key.toLowerCase().replaceAll(" ", "_");
+                        var inputLabel = STR."##prop-\{inputKey}-\{toLabel()}";
+                        var inputString = new ImString(prop.getValue());
+                        var inputCallback = new ImGuiInputTextCallback() {
+                            @Override
+                            public void accept(ImGuiInputTextCallbackData data) {
+                                prop.setValue(data.getBuf());
+                            }
+                        };
+
+                        var size = ImGui.calcTextSize(prop.getValue());
+                        var margin = size.x * 0.1f;
+                        ImGui.pushItemWidth(size.x + margin);
+                        ImGui.inputText(inputLabel, inputString, ImGuiInputTextFlags.CallbackEdit, inputCallback);
+                        ImGui.popItemWidth();
+                    }
+                    default -> {
+                        ImGui.text(key);
+                        ImGui.sameLine();
+                        ImGui.text(prop.getValue());
+                    }
+                }
+            }
             ImGui.endGroup();
             bounds.get(Section.MIDDLE).setFromItemRect();
 
@@ -147,9 +177,13 @@ public class Node2 extends EditorObject {
             Color.separator, 1);
     }
 
+    public String toLabel() {
+        return STR."Node\{objectId}#\{globalId}";
+    }
+
     @Override
     public String toString() {
-        return STR."Node\{objectId}#\{globalId}: '\{label}'";
+        return STR."\{toLabel()}: '\{label}'";
     }
 
     private static class Color {

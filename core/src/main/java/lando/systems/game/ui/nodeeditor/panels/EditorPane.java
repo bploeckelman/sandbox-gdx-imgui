@@ -1,5 +1,6 @@
 package lando.systems.game.ui.nodeeditor.panels;
 
+import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.ImVec4;
@@ -48,8 +49,9 @@ public class EditorPane {
         this.editor = blueprintEditor;
 
         List.of(
-              NodeFactory.printText()
-//            , NodeFactory.printChoice()
+              NodeFactory.text()
+            , NodeFactory.displayText()
+//            , NodeFactory.displayChoice()
 //            , ...
         ).forEach(nodeDesc -> {
             if (nodeRegistry.containsKey(nodeDesc.type)) {
@@ -91,11 +93,11 @@ public class EditorPane {
         NodeEditor.pushStyleVar(NodeEditorStyleVar.NodeBorderWidth,         1.5f);
         NodeEditor.pushStyleVar(NodeEditorStyleVar.HoveredNodeBorderWidth,  2.5f);
         NodeEditor.pushStyleVar(NodeEditorStyleVar.SelectedNodeBorderWidth, 3.5f);
-        NodeEditor.pushStyleVar(NodeEditorStyleVar.PinBorderWidth,          1f);
-        NodeEditor.pushStyleVar(NodeEditorStyleVar.PinRadius,               5f);
-        NodeEditor.pushStyleVar(NodeEditorStyleVar.LinkStrength,            0f);
-        NodeEditor.pushStyleVar(NodeEditorStyleVar.SourceDirection,         new ImVec2(0.0f, 1.0f));
-        NodeEditor.pushStyleVar(NodeEditorStyleVar.TargetDirection,         new ImVec2(0.0f, -1.0f));
+        NodeEditor.pushStyleVar(NodeEditorStyleVar.PinBorderWidth,          2f);
+        NodeEditor.pushStyleVar(NodeEditorStyleVar.PinRadius,               10f);
+        NodeEditor.pushStyleVar(NodeEditorStyleVar.LinkStrength,            250f);
+        NodeEditor.pushStyleVar(NodeEditorStyleVar.SourceDirection,         new ImVec2( 1.0f, 0.0f));
+        NodeEditor.pushStyleVar(NodeEditorStyleVar.TargetDirection,         new ImVec2(-1.0f, 0.0f));
     }
 
     private void unsetStyle() {
@@ -103,43 +105,78 @@ public class EditorPane {
         NodeEditor.popStyleColor(4);
     }
 
+
+    @FunctionalInterface
+    private interface ShowLabel {
+        void apply(String label, int color);
+    }
+    private final ShowLabel showLabel = (label, color) -> {
+        ImGui.setCursorPosY(ImGui.getCursorPosY() - ImGui.getTextLineHeight());
+        var size = ImGui.calcTextSize(label);
+        var padding = ImGui.getStyle().getFramePadding();
+        var spacing = ImGui.getStyle().getItemSpacing();
+        ImGui.setCursorPos(ImGui.getCursorPosX() + spacing.x, ImGui.getCursorPosY() -spacing.y);
+        var rectMin = new ImVec2(ImGui.getCursorScreenPosX() - padding.x, ImGui.getCursorScreenPosY() - padding.y);
+        var rectMax = new ImVec2(ImGui.getCursorScreenPosX() + size.x + padding.x, ImGui.getCursorScreenPosY() + size.y + padding.y);
+        var drawList = ImGui.getWindowDrawList();
+        drawList.addRectFilled(rectMin, rectMax, color, size.y * 0.15f);
+        ImGui.textUnformatted(label);
+    };
+
+    private final ImVec4 createLinkColor = new ImVec4(0.24f, 0.6f, 1f, 0.6f);
+    private final ImVec4 rejectLinkColor = new ImVec4(1f, 0f, 0f, 0.6f);
+    private final ImVec4 acceptLinkColor = new ImVec4(0f, 1f, 0f, 0.6f);
+
     private void handleLinkCreation() {
-        // handle creating links between node pins
-        // TODO(brian): needs to be fleshed out
-        if (NodeEditor.beginCreate()) {
+        if (NodeEditor.beginCreate(createLinkColor, 2f)) {
             var a = new ImLong();
             var b = new ImLong();
-            if (NodeEditor.queryNewLink(a, b)) {
-                // find the pin for each
-                var srcPin = editor.session.findPin(a.get()).orElse(null);
-                var dstPin = editor.session.findPin(b.get()).orElse(null);
 
-                if (srcPin != null && dstPin != null && srcPin != dstPin) {
-                    var valid = true;
-                    if (srcPin.kind == NodeEditorPinKind.Input
-                     && dstPin.kind == NodeEditorPinKind.Output) {
-                        // already correct, src(in) -> dst(out)
-                    } else if (srcPin.kind == NodeEditorPinKind.Output
-                            && dstPin.kind == NodeEditorPinKind.Input) {
-                        // reversed, src(out) <- dst(in); swap pins
-                        var temp = srcPin;
-                        srcPin = dstPin;
-                        dstPin = temp;
-                    } else {
-                        valid = false;
+            if (NodeEditor.queryNewLink(a, b)) {
+                var aPin = a.get();
+                var bPin = b.get();
+
+                var srcPin = editor.session.findPin(aPin);
+                var dstPin = editor.session.findPin(bPin);
+                if (srcPin.isPresent() && dstPin.isPresent()) {
+                    var src = srcPin.get();
+                    var dst = dstPin.get();
+
+                    // ensure the pins are connected in the correct direction
+                    if (src.kind == NodeEditorPinKind.Output
+                     && dst.kind == NodeEditorPinKind.Input) {
+                        // already correct, src(out) -> dst(in)
+                    } else if (src.kind == NodeEditorPinKind.Input
+                            && dst.kind == NodeEditorPinKind.Output) {
+                        // reversed, src(in) <- dst(out); swap src/dst pins
+                        var temp = src;
+                        src = dst;
+                        dst = temp;
                     }
 
-                    if (valid && editor.session.canConnect(srcPin, dstPin)) {
-                        NodeEditor.acceptNewItem();
-                        var link = srcPin.connectTo(dstPin);
-                        editor.session.addLink(link);
+                    // reject incompatible pins, otherwise create a new link when accepted
+                    if (src == dst) {
+                        NodeEditor.rejectNewItem(rejectLinkColor, 2f);
+                    } else if (src.kind == dst.kind) {
+                        showLabel.apply("Incompatible pin kinds", ImColor.rgba(45, 32, 32, 180));
+                        NodeEditor.rejectNewItem(rejectLinkColor, 2f);
+                    } else if (src.type != dst.type) {
+                        showLabel.apply("Incompatible pin types", ImColor.rgba(45, 32, 32, 180));
+                        NodeEditor.rejectNewItem(rejectLinkColor, 2f);
+                    } else if (src.node.globalId == dst.node.globalId) {
+                        showLabel.apply("Cannot link to self", ImColor.rgba(45, 32, 32, 180));
+                        NodeEditor.rejectNewItem(rejectLinkColor, 2f);
                     } else {
-                        NodeEditor.rejectNewItem();
+                        showLabel.apply("Create link", ImColor.rgba(32, 45, 32, 180));
+                        if (NodeEditor.acceptNewItem(acceptLinkColor, 4f)) {
+                            var link = new Link2(src, dst);
+                            editor.session.addLink(link);
+                        }
                     }
                 }
             }
         }
-        NodeEditor.endCreate(); // TODO: should this be inside the `if`?
+        NodeEditor.endCreate();
     }
 
     private void handleDeletions() {

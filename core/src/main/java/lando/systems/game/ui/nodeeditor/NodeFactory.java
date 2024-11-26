@@ -9,19 +9,34 @@ public class NodeFactory {
         return new PinDesc(nodeEditorPinKind, PinType.FLOW);
     }
 
-    public static PinDesc stringPin(String label) {
+    public static PinDesc stringInPin(String label) {
         return new PinDesc(NodeEditorPinKind.Input, PinType.STRING, label);
     }
 
-    public static NodeDesc printText() {
+    public static PinDesc stringOutPin(String label) {
+        return new PinDesc(NodeEditorPinKind.Output, PinType.STRING, label);
+    }
+
+    public static NodeDesc displayText() {
         var node = new NodeDesc();
 
-        node.type = "Print Text";
+        node.type = "Display Text";
 
         node.inputs.add(flowPin(NodeEditorPinKind.Input));
         node.outputs.add(flowPin(NodeEditorPinKind.Output));
 
-        node.inputs.add(stringPin("-> Text"));
+        node.inputs.add(stringInPin("> text"));
+
+        return node;
+    }
+
+    public static NodeDesc text() {
+        var node = new NodeDesc();
+
+        node.type = "Text";
+        node.props.strings.put("Text", "Hello, World!");
+
+        node.outputs.add(stringOutPin("text >"));
 
         return node;
     }

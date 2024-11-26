@@ -4,7 +4,6 @@ import imgui.ImColor;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiWindowFlags;
 import lando.systems.game.Util;
@@ -27,11 +26,11 @@ public class InfoPane {
 
     public void update() {
         // trigger flow viz on keypress
-        if (ImGui.isKeyPressed(ImGuiKey.Z)) {
-            for (var link : editor.session.links) {
-                editor.flow(link);
-            }
-        }
+//        if (ImGui.isKeyPressed(ImGuiKey.Z)) {
+//            for (var link : editor.session.links) {
+//                editor.flow(link);
+//            }
+//        }
 
         // update selection change count
         if (editor.session.hasSelectionChanged()) {

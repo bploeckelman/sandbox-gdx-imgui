@@ -194,12 +194,12 @@ public class Main extends ApplicationAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            setActiveNodeCanvas(
-                nodeCanvasType == NodeCanvas.Type.NODE_EDITOR
-                    ? NodeCanvas.Type.IM_NODES
-                    : NodeCanvas.Type.NODE_EDITOR);
-        }
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+//            setActiveNodeCanvas(
+//                nodeCanvasType == NodeCanvas.Type.NODE_EDITOR
+//                    ? NodeCanvas.Type.IM_NODES
+//                    : NodeCanvas.Type.NODE_EDITOR);
+//        }
 
         stage.act(dt);
         canvasNodeEditor.update();
